@@ -1,8 +1,8 @@
 class Controls {
     public left : boolean = false;
     public right : boolean = false;
-    public up : boolean = false;
-    public down : boolean = false;
+    public forward : boolean = false;
+    public reverse : boolean = false;
 
     constructor() {
         this.addKeyboardListeners();
@@ -12,13 +12,13 @@ class Controls {
         document.onkeydown = (event) => {
             switch (event.key) {
                 case "w":
-                    this.up = true; 
+                    this.forward = true; 
                     break;
                 case "a":
                     this.left = true;
                     break;
                 case "s":
-                    this.down = true;
+                    this.reverse = true;
                     break;
                 case "d":
                     this.right = true;
@@ -28,13 +28,13 @@ class Controls {
         document.onkeyup = (event) => {
             switch (event.key) {
                 case "w":
-                    this.up = false; 
+                    this.forward = false; 
                     break;
                 case "a":
                     this.left = false;
                     break;
                 case "s":
-                    this.down = false;
+                    this.reverse = false;
                     break;
                 case "d":
                     this.right = false;

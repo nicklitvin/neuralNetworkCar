@@ -1,6 +1,6 @@
-var canvas = document.getElementById("myCanvas");
-var ctx = canvas.getContext("2d");
-var car = new Car(100, 100, 30, 50);
+const canvas = document.getElementById("myCanvas");
+const ctx = canvas.getContext("2d");
+const car = new Car(100, 100, 30, 50);
 canvas.width = 200;
 canvas.height = window.innerHeight;
 function animate() {

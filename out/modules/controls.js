@@ -1,45 +1,43 @@
-var Controls = /** @class */ (function () {
-    function Controls() {
+class Controls {
+    constructor() {
         this.left = false;
         this.right = false;
-        this.up = false;
-        this.down = false;
+        this.forward = false;
+        this.reverse = false;
         this.addKeyboardListeners();
     }
-    Controls.prototype.addKeyboardListeners = function () {
-        var _this = this;
-        document.onkeydown = function (event) {
+    addKeyboardListeners() {
+        document.onkeydown = (event) => {
             switch (event.key) {
                 case "w":
-                    _this.up = true;
+                    this.forward = true;
                     break;
                 case "a":
-                    _this.left = true;
+                    this.left = true;
                     break;
                 case "s":
-                    _this.down = true;
+                    this.reverse = true;
                     break;
                 case "d":
-                    _this.right = true;
+                    this.right = true;
                     break;
             }
         };
-        document.onkeyup = function (event) {
+        document.onkeyup = (event) => {
             switch (event.key) {
                 case "w":
-                    _this.up = false;
+                    this.forward = false;
                     break;
                 case "a":
-                    _this.left = false;
+                    this.left = false;
                     break;
                 case "s":
-                    _this.down = false;
+                    this.reverse = false;
                     break;
                 case "d":
-                    _this.right = false;
+                    this.right = false;
                     break;
             }
         };
-    };
-    return Controls;
-}());
+    }
+}
