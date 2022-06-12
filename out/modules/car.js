@@ -28,7 +28,7 @@ class Car {
         ctx.fill();
         ctx.restore();
     }
-    update(canvas) {
+    update() {
         if (Math.abs(this.speed) > 0) {
             if (this.controls.left)
                 this.angle -= this.rotationSpeed * Math.sign(-this.speed);

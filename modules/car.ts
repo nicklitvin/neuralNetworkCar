@@ -1,7 +1,7 @@
 class Car {
     // center of car
-    private x: number;
-    private y: number;
+    public x: number;
+    public y: number;
 
     private width: number;
     private height: number;
@@ -47,7 +47,7 @@ class Car {
         ctx.restore();
     }  
     
-    update(canvas : HTMLCanvasElement) : void {
+    update() : void {
         if (Math.abs(this.speed) > 0) {
             if (this.controls.left) this.angle -= this.rotationSpeed * Math.sign(-this.speed);
             if (this.controls.right) this.angle += this.rotationSpeed * Math.sign(-this.speed);
