@@ -13,8 +13,7 @@ class Car {
         this.zeroSpeedThresh = 0.01;
         this.maxSpeed = 5;
         this.friction = 0.97;
-        this.x = x;
-        this.y = y;
+        this.location = new Coordinate(x, y);
         this.width = width;
         this.height = height;
         this.frontCircleWidth = width * this.circleToCarRatio;
@@ -24,7 +23,7 @@ class Car {
     }
     draw(ctx) {
         ctx.save();
-        ctx.translate(this.x, this.y);
+        ctx.translate(this.location.x, this.location.y);
         ctx.rotate(this.angle);
         ctx.fillStyle = this.color;
         ctx.beginPath();
@@ -35,7 +34,7 @@ class Car {
         ctx.restore();
         this.sensor.draw(ctx);
     }
-    update() {
+    update(borders) {
         if (Math.abs(this.speed) > 0) {
             if (this.controls.left)
                 this.angle -= this.rotationSpeed * Math.sign(-this.speed);
@@ -51,8 +50,8 @@ class Car {
             this.speed = 0;
         this.speed = Math.min(this.maxSpeed, this.speed);
         this.speed = Math.max(this.maxSpeed * -1, this.speed);
-        this.x -= this.speed * Math.cos(this.angle - Math.PI / 2);
-        this.y -= this.speed * Math.sin(this.angle - Math.PI / 2);
-        this.sensor.update();
+        this.location.x -= this.speed * Math.cos(this.angle - Math.PI / 2);
+        this.location.y -= this.speed * Math.sin(this.angle - Math.PI / 2);
+        this.sensor.update(borders);
     }
 }

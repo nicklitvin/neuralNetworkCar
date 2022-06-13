@@ -1,7 +1,6 @@
 class Car {
     // center of car
-    public x: number;
-    public y: number;
+    public location: Coordinate;
 
     // size
     private width: number;
@@ -29,8 +28,7 @@ class Car {
     private controls: Controls;
 
     constructor(x: number, y: number, width: number, height: number) {
-        this.x = x;
-        this.y = y;
+        this.location = new Coordinate(x,y);
         this.width = width;
         this.height = height;
         this.frontCircleWidth = width * this.circleToCarRatio;
@@ -41,7 +39,7 @@ class Car {
 
     draw(ctx: CanvasRenderingContext2D) : void {
         ctx.save();
-        ctx.translate(this.x,this.y);
+        ctx.translate(this.location.x,this.location.y);
         ctx.rotate(this.angle);
 
         ctx.fillStyle = this.color;
@@ -62,7 +60,7 @@ class Car {
         this.sensor.draw(ctx);
     }  
     
-    update() : void {
+    update(borders : Border[]) : void {
         if (Math.abs(this.speed) > 0) {
             if (this.controls.left) this.angle -= this.rotationSpeed * Math.sign(-this.speed);
             if (this.controls.right) this.angle += this.rotationSpeed * Math.sign(-this.speed);
@@ -76,10 +74,10 @@ class Car {
         this.speed = Math.min(this.maxSpeed,this.speed);
         this.speed = Math.max(this.maxSpeed*-1,this.speed);
 
-        this.x -= this.speed * Math.cos(this.angle - Math.PI/2);
-        this.y -= this.speed * Math.sin(this.angle - Math.PI/2);
+        this.location.x -= this.speed * Math.cos(this.angle - Math.PI/2);
+        this.location.y -= this.speed * Math.sin(this.angle - Math.PI/2);
 
-        this.sensor.update();
+        this.sensor.update(borders);
     }
 }
 

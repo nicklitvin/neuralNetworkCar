@@ -5,7 +5,7 @@ class Road {
     private height : number;
     private lanes : number;
 
-    private borders : Border[] = [];
+    public borders : Border[] = [];
 
     private borderColor = "white";
     private borderWidth = 5;

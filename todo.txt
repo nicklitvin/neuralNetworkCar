@@ -1,2 +1,1 @@
 add assertions
-move locations to coordinates
