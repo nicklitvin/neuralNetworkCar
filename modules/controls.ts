@@ -8,7 +8,7 @@ class Controls {
         this.addKeyboardListeners();
     }
 
-    private addKeyboardListeners() {
+    private addKeyboardListeners() : void{
         document.onkeydown = (event) => {
             switch (event.key) {
                 case "w":

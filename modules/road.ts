@@ -7,6 +7,13 @@ class Road {
 
     private borders : Border[] = [];
 
+    private borderColor = "white";
+    private borderWidth = 5;
+
+    private laneBorderColor = "white";
+    private laneBorderWidth = 2;
+    private laneBorderDashes = [20,20];
+
     constructor(xCenter : number, yCenter : number, width : number, height : number, lanes : number) {
         this.left = xCenter - width / 2;
         this.top = yCenter - height / 2;
@@ -26,22 +33,22 @@ class Road {
         this.borders.push(rightBorder);
     }
 
-    draw(ctx : CanvasRenderingContext2D) {
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "white";
+    draw(ctx : CanvasRenderingContext2D) : void {
+        ctx.lineWidth = this.laneBorderWidth;
+        ctx.strokeStyle = this.laneBorderColor;
+        ctx.setLineDash(this.laneBorderDashes);
 
         for (let i = 1; i < this.lanes; i++) {
             const x = this.left + i * this.width / this.lanes;
 
             ctx.beginPath();
-            ctx.setLineDash([20,20]);
             ctx.moveTo(x, this.top);
             ctx.lineTo(x, this.top + this.height);
             ctx.stroke();
-        }
+        }        
 
-        ctx.lineWidth = 5;
-        ctx.strokeStyle = "yellow";
+        ctx.lineWidth = this.borderWidth;
+        ctx.strokeStyle = this.borderColor;
 
         for (let border of this.borders) {
             ctx.beginPath();

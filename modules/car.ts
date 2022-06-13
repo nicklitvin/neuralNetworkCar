@@ -3,13 +3,18 @@ class Car {
     public x: number;
     public y: number;
 
+    // size
     private width: number;
     private height: number;
     private frontCircleWidth: number;
-    private controls: Controls;
+    private circleToCarRatio = 1/4;
+
+    // cosmetics
+    private color = "white";
+    private frontColor = "orange";
 
     // 0 = ->, -pi = <-
-    private angle : number = 0;
+    public angle : number = 0;
     private rotationSpeed : number = 0.05;
 
     // speed: negative = forward, positive = backward
@@ -19,13 +24,19 @@ class Car {
     private maxSpeed : number = 5;
     private friction : number = 0.97;
 
+    // controls
+    public sensor : Sensor;
+    private controls: Controls;
+
     constructor(x: number, y: number, width: number, height: number) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
-        this.frontCircleWidth = width / 4;
+        this.frontCircleWidth = width * this.circleToCarRatio;
         this.controls = new Controls();
+        this.sensor = new Sensor(this);
+        this.sensor.update();
     }
 
     draw(ctx: CanvasRenderingContext2D) : void {
@@ -33,7 +44,7 @@ class Car {
         ctx.translate(this.x,this.y);
         ctx.rotate(this.angle);
 
-        ctx.fillStyle = "white";
+        ctx.fillStyle = this.color;
         ctx.beginPath();
         ctx.fillRect(
             -this.width/2,
@@ -41,10 +52,14 @@ class Car {
             this.width,
             this.height
         )
-        ctx.fillStyle = "orange";
+
+        ctx.fillStyle = this.frontColor;
         ctx.arc(0,-this.height/3,this.frontCircleWidth,0,2*Math.PI);
         ctx.fill();
+
         ctx.restore();
+
+        this.sensor.draw(ctx);
     }  
     
     update() : void {
@@ -63,6 +78,8 @@ class Car {
 
         this.x -= this.speed * Math.cos(this.angle - Math.PI/2);
         this.y -= this.speed * Math.sin(this.angle - Math.PI/2);
+
+        this.sensor.update();
     }
 }
 

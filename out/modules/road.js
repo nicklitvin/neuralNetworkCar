@@ -1,6 +1,11 @@
 class Road {
     constructor(xCenter, yCenter, width, height, lanes) {
         this.borders = [];
+        this.borderColor = "white";
+        this.borderWidth = 5;
+        this.laneBorderColor = "white";
+        this.laneBorderWidth = 2;
+        this.laneBorderDashes = [20, 20];
         this.left = xCenter - width / 2;
         this.top = yCenter - height / 2;
         this.width = width;
@@ -12,18 +17,18 @@ class Road {
         this.borders.push(rightBorder);
     }
     draw(ctx) {
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "white";
+        ctx.lineWidth = this.laneBorderWidth;
+        ctx.strokeStyle = this.laneBorderColor;
+        ctx.setLineDash(this.laneBorderDashes);
         for (let i = 1; i < this.lanes; i++) {
             const x = this.left + i * this.width / this.lanes;
             ctx.beginPath();
-            ctx.setLineDash([20, 20]);
             ctx.moveTo(x, this.top);
             ctx.lineTo(x, this.top + this.height);
             ctx.stroke();
         }
-        ctx.lineWidth = 5;
-        ctx.strokeStyle = "yellow";
+        ctx.lineWidth = this.borderWidth;
+        ctx.strokeStyle = this.borderColor;
         for (let border of this.borders) {
             ctx.beginPath();
             ctx.setLineDash([]);

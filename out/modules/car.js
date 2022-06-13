@@ -1,5 +1,9 @@
 class Car {
     constructor(x, y, width, height) {
+        this.circleToCarRatio = 1 / 4;
+        // cosmetics
+        this.color = "white";
+        this.frontColor = "orange";
         // 0 = ->, -pi = <-
         this.angle = 0;
         this.rotationSpeed = 0.05;
@@ -13,20 +17,23 @@ class Car {
         this.y = y;
         this.width = width;
         this.height = height;
-        this.frontCircleWidth = width / 4;
+        this.frontCircleWidth = width * this.circleToCarRatio;
         this.controls = new Controls();
+        this.sensor = new Sensor(this);
+        this.sensor.update();
     }
     draw(ctx) {
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
-        ctx.fillStyle = "white";
+        ctx.fillStyle = this.color;
         ctx.beginPath();
         ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
-        ctx.fillStyle = "orange";
+        ctx.fillStyle = this.frontColor;
         ctx.arc(0, -this.height / 3, this.frontCircleWidth, 0, 2 * Math.PI);
         ctx.fill();
         ctx.restore();
+        this.sensor.draw(ctx);
     }
     update() {
         if (Math.abs(this.speed) > 0) {
@@ -46,5 +53,6 @@ class Car {
         this.speed = Math.max(this.maxSpeed * -1, this.speed);
         this.x -= this.speed * Math.cos(this.angle - Math.PI / 2);
         this.y -= this.speed * Math.sin(this.angle - Math.PI / 2);
+        this.sensor.update();
     }
 }
