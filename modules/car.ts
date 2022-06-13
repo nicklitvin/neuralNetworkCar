@@ -1,16 +1,15 @@
 class Car {
     // center of car
     public location: Coordinate;
+    private corners : Coordinate[];
 
     // size
     private width: number;
     private height: number;
-    private frontCircleWidth: number;
-    private circleToCarRatio = 1/4;
 
     // cosmetics
     private color = "white";
-    private frontColor = "orange";
+    private damagedColor = "black";
 
     // 0 = ->, -pi = <-
     public angle : number = 0;
@@ -26,41 +25,56 @@ class Car {
     // controls
     public sensor : Sensor;
     private controls: Controls;
+    private damaged = false;
 
     constructor(x: number, y: number, width: number, height: number) {
         this.location = new Coordinate(x,y);
         this.width = width;
         this.height = height;
-        this.frontCircleWidth = width * this.circleToCarRatio;
         this.controls = new Controls();
         this.sensor = new Sensor(this);
         this.sensor.update();
     }
 
     draw(ctx: CanvasRenderingContext2D) : void {
-        ctx.save();
-        ctx.translate(this.location.x,this.location.y);
-        ctx.rotate(this.angle);
-
         ctx.fillStyle = this.color;
+        if (this.damaged) {
+            ctx.fillStyle = this.damagedColor;
+        }
+        
         ctx.beginPath();
-        ctx.fillRect(
-            -this.width/2,
-            -this.height/2,
-            this.width,
-            this.height
-        )
+        ctx.moveTo(this.corners[0].x,this.corners[0].y)
+        for (let i = 1; i < this.corners.length; i++) {
+            ctx.lineTo(this.corners[i].x,this.corners[i].y);
+        }
 
-        ctx.fillStyle = this.frontColor;
-        ctx.arc(0,-this.height/3,this.frontCircleWidth,0,2*Math.PI);
         ctx.fill();
-
-        ctx.restore();
 
         this.sensor.draw(ctx);
     }  
     
     update(borders : Border[]) : void {
+        if (!this.damaged) {
+            this.moveCar();
+            this.sensor.update(borders);
+            this.updateCarCorners();
+            this.updateDamage(borders);
+        }
+    }
+
+    private updateDamage(borders : Border[]) : void{
+        for (let corner of this.corners) {
+            let line = new Border(this.location,corner);
+            for (let border of borders)
+            if (Intersect.getPercentUntilWall(line,border) >= 0) {
+                this.damaged = true;
+                return;
+            }
+        }
+        this.damaged = false;
+    }
+
+    private moveCar() : void {
         if (Math.abs(this.speed) > 0) {
             if (this.controls.left) this.angle -= this.rotationSpeed * Math.sign(-this.speed);
             if (this.controls.right) this.angle += this.rotationSpeed * Math.sign(-this.speed);
@@ -76,8 +90,30 @@ class Car {
 
         this.location.x -= this.speed * Math.cos(this.angle - Math.PI/2);
         this.location.y -= this.speed * Math.sin(this.angle - Math.PI/2);
+    }
 
-        this.sensor.update(borders);
+    private updateCarCorners() {
+        let corners = [];
+        const radius = Math.hypot(this.width/2,this.height/2);
+        const angle = Math.atan2(this.width,this.height);
+
+        corners.push(new Coordinate(
+            this.location.x - Math.sin(-this.angle-angle) * radius ,
+            this.location.y - Math.cos(-this.angle-angle) * radius
+        ))
+        corners.push(new Coordinate(
+            this.location.x - Math.sin(-this.angle+angle) * radius,
+            this.location.y - Math.cos(-this.angle+angle) * radius
+        ))
+        corners.push(new Coordinate(
+            this.location.x - Math.sin(-this.angle-angle+Math.PI) * radius,
+            this.location.y - Math.cos(-this.angle-angle+Math.PI) * radius
+        ))
+        corners.push(new Coordinate(
+            this.location.x - Math.sin(-this.angle+angle+Math.PI) * radius,
+            this.location.y - Math.cos(-this.angle+angle+Math.PI) * radius
+        ))
+        this.corners = corners;
     }
 }
 
