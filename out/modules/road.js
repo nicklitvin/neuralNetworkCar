@@ -15,6 +15,7 @@ class Road {
         let rightBorder = new Border(new Coordinate(this.left + this.width, -this.height / 2), new Coordinate(this.left + this.width, this.height / 2));
         this.borders.push(leftBorder);
         this.borders.push(rightBorder);
+        this.laneWidth = this.width / (this.lanes);
     }
     draw(ctx) {
         ctx.lineWidth = this.laneBorderWidth;
@@ -36,5 +37,14 @@ class Road {
             ctx.lineTo(border.to.x, border.to.y);
             ctx.stroke();
         }
+    }
+    /**
+     * Lanes numbered from 1 - laneCount
+     * @param lane
+     * @returns x val corresponding to center of lane
+     */
+    getLaneXval(lane) {
+        lane = Math.min(this.lanes, Math.max(1, lane));
+        return this.left + this.laneWidth / 2 + this.laneWidth * (lane - 1);
     }
 }

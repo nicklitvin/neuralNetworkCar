@@ -1,7 +1,8 @@
 class Car {
-    constructor(x, y, width, height) {
-        // cosmetics
-        this.color = "white";
+    constructor(x, y, isDummy = true) {
+        // size
+        this.width = 30;
+        this.height = 50;
         this.damagedColor = "black";
         // 0 = ->, -pi = <-
         this.angle = 0;
@@ -14,11 +15,17 @@ class Car {
         this.friction = 0.97;
         this.damaged = false;
         this.location = new Coordinate(x, y);
-        this.width = width;
-        this.height = height;
-        this.controls = new Controls();
-        this.sensor = new Sensor(this);
-        this.sensor.update();
+        this.isDummy = isDummy;
+        this.controls = new Controls(this.isDummy);
+        if (this.isDummy) {
+            this.maxSpeed = 3;
+            this.color = "red";
+        }
+        else {
+            this.color = "blue";
+            this.sensor = new Sensor(this);
+            this.sensor.update();
+        }
     }
     draw(ctx) {
         ctx.fillStyle = this.color;
@@ -31,26 +38,32 @@ class Car {
             ctx.lineTo(this.corners[i].x, this.corners[i].y);
         }
         ctx.fill();
-        this.sensor.draw(ctx);
+        if (this.sensor != null) {
+            this.sensor.draw(ctx);
+        }
     }
-    update(borders) {
+    update(borders = null) {
         if (!this.damaged) {
             this.moveCar();
-            this.sensor.update(borders);
             this.updateCarCorners();
+            this.updateCarBorders();
+        }
+        if (!this.isDummy) {
+            this.sensor.update(borders);
             this.updateDamage(borders);
         }
     }
     updateDamage(borders) {
-        for (let corner of this.corners) {
-            let line = new Border(this.location, corner);
-            for (let border of borders)
-                if (Intersect.getPercentUntilWall(line, border) >= 0) {
-                    this.damaged = true;
-                    return;
-                }
+        if (!this.damaged) {
+            for (let corner of this.corners) {
+                let line = new Border(this.location, corner);
+                for (let border of borders)
+                    if (Intersect.getPercentUntilWall(line, border) >= 0) {
+                        this.damaged = true;
+                        return;
+                    }
+            }
         }
-        this.damaged = false;
     }
     moveCar() {
         if (Math.abs(this.speed) > 0) {
@@ -80,5 +93,11 @@ class Car {
         corners.push(new Coordinate(this.location.x - Math.sin(-this.angle - angle + Math.PI) * radius, this.location.y - Math.cos(-this.angle - angle + Math.PI) * radius));
         corners.push(new Coordinate(this.location.x - Math.sin(-this.angle + angle + Math.PI) * radius, this.location.y - Math.cos(-this.angle + angle + Math.PI) * radius));
         this.corners = corners;
+    }
+    updateCarBorders() {
+        this.borders = [];
+        for (let i = 0; i < this.corners.length; i++) {
+            this.borders.push(new Border(this.corners[i], this.corners[(i + 1) % this.corners.length]));
+        }
     }
 }

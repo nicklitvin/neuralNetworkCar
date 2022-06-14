@@ -4,8 +4,12 @@ class Controls {
     public forward : boolean = false;
     public reverse : boolean = false;
 
-    constructor() {
-        this.addKeyboardListeners();
+    constructor(isDummy : boolean) {
+        if (isDummy) {
+            this.forward = true;
+        } else {
+            this.addKeyboardListeners();
+        }
     }
 
     private addKeyboardListeners() : void{

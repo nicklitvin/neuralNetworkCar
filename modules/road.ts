@@ -5,6 +5,8 @@ class Road {
     private height : number;
     private lanes : number;
 
+    private laneWidth : number;
+
     public borders : Border[] = [];
 
     private borderColor = "white";
@@ -31,6 +33,8 @@ class Road {
         );
         this.borders.push(leftBorder);
         this.borders.push(rightBorder);
+
+        this.laneWidth = this.width / (this.lanes);
     }
 
     draw(ctx : CanvasRenderingContext2D) : void {
@@ -58,4 +62,15 @@ class Road {
             ctx.stroke();
         }
     } 
+
+    /**
+     * Lanes numbered from 1 - laneCount
+     * @param lane 
+     * @returns x val corresponding to center of lane
+     */
+    getLaneXval(lane : number) : number {
+        lane = Math.min(this.lanes,Math.max(1,lane));
+
+        return this.left + this.laneWidth / 2 + this.laneWidth * (lane - 1);
+    }
 }

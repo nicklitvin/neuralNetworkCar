@@ -1,10 +1,15 @@
 class Controls {
-    constructor() {
+    constructor(isDummy) {
         this.left = false;
         this.right = false;
         this.forward = false;
         this.reverse = false;
-        this.addKeyboardListeners();
+        if (isDummy) {
+            this.forward = true;
+        }
+        else {
+            this.addKeyboardListeners();
+        }
     }
     addKeyboardListeners() {
         document.onkeydown = (event) => {
