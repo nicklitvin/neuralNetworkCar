@@ -28,6 +28,7 @@ class Car {
     private controls: Controls;
     private damaged = false;
     private isDummy : boolean;
+    private brain : NeuralNetwork;
 
     constructor(x: number, y: number, isDummy : boolean = true) {
         this.location = new Coordinate(x,y);
@@ -41,6 +42,7 @@ class Car {
             this.color = "blue";
             this.sensor = new Sensor(this);
             this.sensor.update();    
+            this.brain = new NeuralNetwork([this.sensor.rayCount,10,4]);
         }
     }
 
@@ -72,6 +74,10 @@ class Car {
         if (!this.isDummy) {
             this.sensor.update(borders);
             this.updateDamage(borders);
+            const offsets : number[] = this.sensor.getRayValues().map(x => 1-x);
+            const out : number[] = NeuralNetwork.feedForward(offsets,this.brain);
+
+            this.controls.applyInput(out);
         }
     }
 

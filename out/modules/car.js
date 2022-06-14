@@ -25,6 +25,7 @@ class Car {
             this.color = "blue";
             this.sensor = new Sensor(this);
             this.sensor.update();
+            this.brain = new NeuralNetwork([this.sensor.rayCount, 10, 4]);
         }
     }
     draw(ctx) {
@@ -51,6 +52,9 @@ class Car {
         if (!this.isDummy) {
             this.sensor.update(borders);
             this.updateDamage(borders);
+            const offsets = this.sensor.getRayValues().map(x => 1 - x);
+            const out = NeuralNetwork.feedForward(offsets, this.brain);
+            this.controls.applyInput(out);
         }
     }
     updateDamage(borders) {

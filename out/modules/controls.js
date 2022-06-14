@@ -45,4 +45,10 @@ class Controls {
             }
         };
     }
+    applyInput(input) {
+        input[0] == 1 ? this.forward = true : this.forward = false;
+        input[1] == 1 ? this.reverse = true : this.reverse = false;
+        input[2] == 1 ? this.left = true : this.left = false;
+        input[3] == 1 ? this.right = true : this.right = false;
+    }
 }

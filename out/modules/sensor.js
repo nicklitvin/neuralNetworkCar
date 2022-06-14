@@ -39,6 +39,13 @@ class Sensor {
             ctx.stroke();
         }
     }
+    getRayValues() {
+        let result = [];
+        for (let ray of this.rays) {
+            result.push(this.getShortestPercent(ray));
+        }
+        return result;
+    }
     getShortestPercent(ray) {
         let distance = 1;
         for (let border of this.borders) {

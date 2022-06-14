@@ -1,7 +1,7 @@
 class Sensor {
     private car : Car;
 
-    private rayCount = 5;
+    public rayCount = 5;
     private rayLength = 100;
     private raySpread = Math.PI;
 
@@ -60,7 +60,15 @@ class Sensor {
         }
     }
 
-    private getShortestPercent(ray : Border) {
+    getRayValues() : number[] {
+        let result : number[] = [];
+        for (let ray of this.rays) {
+            result.push(this.getShortestPercent(ray));
+        }
+        return result;
+    }
+
+    private getShortestPercent(ray : Border) : number{
         let distance = 1;
         for (let border of this.borders) {
             let curr = Intersect.getPercentUntilWall(ray,border);
