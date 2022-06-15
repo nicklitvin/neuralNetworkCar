@@ -17,4 +17,8 @@ class NeuralNetwork {
         }
         return outputs; 
     }
+
+    static mutate(network : NeuralNetwork, constant : number) : NeuralNetwork{
+        return network;
+    }
 }

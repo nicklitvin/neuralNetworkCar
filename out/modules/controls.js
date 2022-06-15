@@ -51,4 +51,10 @@ class Controls {
         input[2] == 1 ? this.left = true : this.left = false;
         input[3] == 1 ? this.right = true : this.right = false;
     }
+    isMoving() {
+        return true;
+        // if ( (this.left != this.right) || (this.forward != this.reverse)) {
+        //     return true;
+        // }
+    }
 }

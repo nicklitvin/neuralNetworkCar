@@ -13,4 +13,7 @@ class NeuralNetwork {
         }
         return outputs;
     }
+    static mutate(network, constant) {
+        return network;
+    }
 }

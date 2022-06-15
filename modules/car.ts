@@ -20,33 +20,38 @@ class Car {
     private speed : number = 0;
     private acceleration : number = 0.2;
     private zeroSpeedThresh : number = 0.01;
-    private maxSpeed : number = 5;
+    private maxDummySpeed : number = 2;
+    private maxSpeed : number = 3;
     private friction : number = 0.97;
 
     // controls
     public sensor : Sensor;
-    private controls: Controls;
-    private damaged = false;
+    public controls: Controls;
+    public damaged = false;
     private isDummy : boolean;
-    private brain : NeuralNetwork;
+    public brain : NeuralNetwork;
 
-    constructor(x: number, y: number, isDummy : boolean = true) {
+    constructor(x: number, y: number, isDummy = true, brain : NeuralNetwork = null) {
         this.location = new Coordinate(x,y);
         this.isDummy = isDummy;
         this.controls = new Controls(this.isDummy);
 
         if (this.isDummy) {
-            this.maxSpeed = 3;
+            this.maxSpeed = this.maxDummySpeed;
             this.color = "red";
         } else {
             this.color = "blue";
             this.sensor = new Sensor(this);
-            this.sensor.update();    
-            this.brain = new NeuralNetwork([this.sensor.rayCount,10,4]);
+            this.sensor.update();
+            if (brain) {
+                this.brain = brain;
+            } else {
+                this.brain = new NeuralNetwork([this.sensor.rayCount,10,4]);
+            }    
         }
     }
 
-    draw(ctx: CanvasRenderingContext2D) : void {
+    draw(ctx: CanvasRenderingContext2D, drawSensors : boolean) : void {
         ctx.fillStyle = this.color;
         if (this.damaged) {
             ctx.fillStyle = this.damagedColor;
@@ -59,7 +64,7 @@ class Car {
         }
         ctx.fill();
 
-        if (this.sensor != null) {
+        if (this.sensor != null && drawSensors) {
             this.sensor.draw(ctx);
         }
     }  
@@ -74,9 +79,9 @@ class Car {
         if (!this.isDummy) {
             this.sensor.update(borders);
             this.updateDamage(borders);
+
             const offsets : number[] = this.sensor.getRayValues().map(x => 1-x);
             const out : number[] = NeuralNetwork.feedForward(offsets,this.brain);
-
             this.controls.applyInput(out);
         }
     }

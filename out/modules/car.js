@@ -1,5 +1,5 @@
 class Car {
-    constructor(x, y, isDummy = true) {
+    constructor(x, y, isDummy = true, brain = null) {
         // size
         this.width = 30;
         this.height = 50;
@@ -11,24 +11,30 @@ class Car {
         this.speed = 0;
         this.acceleration = 0.2;
         this.zeroSpeedThresh = 0.01;
-        this.maxSpeed = 5;
+        this.maxDummySpeed = 2;
+        this.maxSpeed = 3;
         this.friction = 0.97;
         this.damaged = false;
         this.location = new Coordinate(x, y);
         this.isDummy = isDummy;
         this.controls = new Controls(this.isDummy);
         if (this.isDummy) {
-            this.maxSpeed = 3;
+            this.maxSpeed = this.maxDummySpeed;
             this.color = "red";
         }
         else {
             this.color = "blue";
             this.sensor = new Sensor(this);
             this.sensor.update();
-            this.brain = new NeuralNetwork([this.sensor.rayCount, 10, 4]);
+            if (brain) {
+                this.brain = brain;
+            }
+            else {
+                this.brain = new NeuralNetwork([this.sensor.rayCount, 10, 4]);
+            }
         }
     }
-    draw(ctx) {
+    draw(ctx, drawSensors) {
         ctx.fillStyle = this.color;
         if (this.damaged) {
             ctx.fillStyle = this.damagedColor;
@@ -39,7 +45,7 @@ class Car {
             ctx.lineTo(this.corners[i].x, this.corners[i].y);
         }
         ctx.fill();
-        if (this.sensor != null) {
+        if (this.sensor != null && drawSensors) {
             this.sensor.draw(ctx);
         }
     }
