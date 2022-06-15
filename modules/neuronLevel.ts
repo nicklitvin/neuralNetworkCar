@@ -1,13 +1,13 @@
 class NeuronLevel {
-    inputNodes : number[];
-    outputNodes : number[];
-    outputBiases : number[];
-    weights : number[][] = [];
+    protected inputNodes : number[];
+    protected outputNodes : number[];
+    protected outputThresh : number[];
+    protected weights : number[][] = [];
 
     constructor(inputNum : number, outputNum : number) {
         this.inputNodes = new Array(inputNum);
         this.outputNodes = new Array(outputNum);
-        this.outputBiases = new Array(outputNum);
+        this.outputThresh = new Array(outputNum);
 
         for (let i = 0; i < inputNum; i++) {
             this.weights.push(new Array(outputNum));
@@ -22,7 +22,7 @@ class NeuronLevel {
             }
         }
         for (let j = 0; j < level.outputNodes.length; j++) {
-            level.outputBiases[j] = Math.random()*2 - 1;
+            level.outputThresh[j] = Math.random()*2 - 1;
         }
     }
 
@@ -36,12 +36,26 @@ class NeuronLevel {
             for (let i = 0; i < level.inputNodes.length; i++) {
                 sum += level.inputNodes[i] * level.weights[i][j];
             }
-
             level.outputNodes[j] = 0;
-            if (sum >= level.outputBiases[j]) {
+            
+            if (sum >= level.outputThresh[j]) {
                 level.outputNodes[j] = 1;
             } 
         }
         return level.outputNodes;
+    }
+
+    static mutateOutputThresh(level : NeuronLevel, constant : number) : void {
+        for (let i = 0; i < level.outputThresh.length; i++) {
+            level.outputThresh[i] += (Math.random() * 2 - 1) * constant;
+        }
+    }
+    
+    static mutateWeights(level : NeuronLevel, constant : number) : void {
+        for (let i = 0; i < level.weights.length; i++) {
+            for (let j = 0; j < level.weights[i].length; j++) {
+                level.weights[i][j] += (Math.random() * 2 - 1) * constant;
+            }
+        }
     }
 }

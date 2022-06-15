@@ -30,6 +30,9 @@ class Car {
     public damaged = false;
     private isDummy : boolean;
     public brain : NeuralNetwork;
+    private networkNodeCounts : number[];
+
+    public carsPassed : number = 0;
 
     constructor(x: number, y: number, isDummy = true, brain : NeuralNetwork = null) {
         this.location = new Coordinate(x,y);
@@ -46,7 +49,8 @@ class Car {
             if (brain) {
                 this.brain = brain;
             } else {
-                this.brain = new NeuralNetwork([this.sensor.rayCount,10,4]);
+                this.networkNodeCounts = [this.sensor.rayCount,10,4]
+                this.brain = new NeuralNetwork(this.networkNodeCounts);
             }    
         }
     }
@@ -83,6 +87,15 @@ class Car {
             const offsets : number[] = this.sensor.getRayValues().map(x => 1-x);
             const out : number[] = NeuralNetwork.feedForward(offsets,this.brain);
             this.controls.applyInput(out);
+        }
+    }
+
+    updateCarsPassed(dummyCars : Car[]) : void{
+        this.carsPassed = 0;
+        for (let car of dummyCars) {
+            if (this.location.y < car.location.y) {
+                this.carsPassed += 1;
+            }
         }
     }
 

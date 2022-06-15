@@ -1,4 +1,6 @@
-mutate results
+TODO
+fix mutation process
+add comments, clean public/private
 
 variant speeds
 stay in lane condition

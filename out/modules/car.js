@@ -15,6 +15,7 @@ class Car {
         this.maxSpeed = 3;
         this.friction = 0.97;
         this.damaged = false;
+        this.carsPassed = 0;
         this.location = new Coordinate(x, y);
         this.isDummy = isDummy;
         this.controls = new Controls(this.isDummy);
@@ -30,7 +31,8 @@ class Car {
                 this.brain = brain;
             }
             else {
-                this.brain = new NeuralNetwork([this.sensor.rayCount, 10, 4]);
+                this.networkNodeCounts = [this.sensor.rayCount, 10, 4];
+                this.brain = new NeuralNetwork(this.networkNodeCounts);
             }
         }
     }
@@ -61,6 +63,14 @@ class Car {
             const offsets = this.sensor.getRayValues().map(x => 1 - x);
             const out = NeuralNetwork.feedForward(offsets, this.brain);
             this.controls.applyInput(out);
+        }
+    }
+    updateCarsPassed(dummyCars) {
+        this.carsPassed = 0;
+        for (let car of dummyCars) {
+            if (this.location.y < car.location.y) {
+                this.carsPassed += 1;
+            }
         }
     }
     updateDamage(borders) {
