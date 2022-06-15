@@ -1,7 +1,8 @@
 TODO
+make smarter mutation technique
 add comments, clean public/private
 rate location on curve for score
-generate better traffic
+determine if time to terminate timer based on activity
 variant speeds
 stay in lane condition
 add assertions

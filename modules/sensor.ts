@@ -1,7 +1,7 @@
 class Sensor {
     private car : Car;
 
-    public rayCount = 5;
+    public rayCount = 4;
     private rayLength = 100;
     private raySpread = Math.PI;
 
