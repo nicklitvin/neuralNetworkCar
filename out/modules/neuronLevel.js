@@ -38,13 +38,19 @@ class NeuronLevel {
     static mutateOutputThresh(level, constant) {
         for (let i = 0; i < level.outputThresh.length; i++) {
             level.outputThresh[i] += (Math.random() * 2 - 1) * constant;
+            level.outputThresh[i] = this.normalizeValue(level.outputThresh[i]);
         }
     }
     static mutateWeights(level, constant) {
         for (let i = 0; i < level.weights.length; i++) {
             for (let j = 0; j < level.weights[i].length; j++) {
                 level.weights[i][j] += (Math.random() * 2 - 1) * constant;
+                level.weights[i][j] = this.normalizeValue(level.weights[i][j]);
             }
         }
     }
+    static normalizeValue(val) {
+        return Math.min(this.maxVal, Math.max(-1 * this.maxVal, val));
+    }
 }
+NeuronLevel.maxVal = 3;

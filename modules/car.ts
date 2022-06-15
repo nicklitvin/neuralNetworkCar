@@ -33,6 +33,7 @@ class Car {
     private networkNodeCounts : number[];
 
     public carsPassed : number = 0;
+    public score : number = 0;
 
     constructor(x: number, y: number, isDummy = true, brain : NeuralNetwork = null) {
         this.location = new Coordinate(x,y);
@@ -49,7 +50,7 @@ class Car {
             if (brain) {
                 this.brain = brain;
             } else {
-                this.networkNodeCounts = [this.sensor.rayCount,10,4]
+                this.networkNodeCounts = [this.sensor.rayCount,6,4]
                 this.brain = new NeuralNetwork(this.networkNodeCounts);
             }    
         }
@@ -159,6 +160,22 @@ class Car {
         for (let i = 0; i < this.corners.length; i++) {
             this.borders.push(new Border(this.corners[i],this.corners[(i+1) % this.corners.length]));
         }
+    }
+
+    public calculatePerformance () : void {
+        let score : number = 0;
+        let exponent : number = 1;
+        let factors : number = 3;
+
+        score += exponent * (this.damaged ? 0 : factors - 1);
+        exponent *= factors;
+
+        score += exponent * Math.min(factors - 1, Math.max(0,-this.location.y / 100,factors));
+        exponent *= factors;
+
+        score += this.carsPassed;
+        
+        this.score = score;
     }
 }
 

@@ -1,7 +1,9 @@
 TODO
-fix mutation process
 add comments, clean public/private
-
+rate location on curve for score
+generate better traffic
 variant speeds
 stay in lane condition
 add assertions
+
+

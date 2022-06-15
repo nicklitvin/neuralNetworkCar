@@ -5,12 +5,20 @@ canvas.height = window.innerHeight;
 const LANE_COUNT = 3;
 const START_LANE = 2;
 const SMART_CARS_NUM = 100;
-const MUTATE_CONSTANT = 0.2;
-const STORAGE_BRAIN = "bestBrain";
-const STORAGE_Y = "bestY";
+const MUTATE_STRICT = 0.1 
 const TIME_LIMIT_SEC = 5;
+const DRAW_SENSORS = false;
+
+const STORAGE_BRAIN = "bestBrain";
+const STORAGE_HIGH = "bestY";
+const STORAGE_MUTATE = "mutateConstant";
+
+let STORED_CONSTANT = localStorage.getItem(STORAGE_MUTATE);
+let MUTATE_CONSTANT : number = STORED_CONSTANT ? Number(STORED_CONSTANT) : 0.7;
+console.log("mutate constant:",MUTATE_CONSTANT);
 
 let timeLimit = false;
+
 setTimeout( () => {
     timeLimit = true;
 },TIME_LIMIT_SEC * 1000);
@@ -28,12 +36,24 @@ const dummyCars : Car[] = [
 ];
 
 function saveBestBrain() {
-    let highScore = localStorage.getItem(STORAGE_Y);
-    let smartSorted = smartCars.sort( (a,b) => (b.carsPassed - a.carsPassed));
+    let highScore = localStorage.getItem(STORAGE_HIGH);
+    
+    smartCars.forEach(car => car.calculatePerformance());
+    smartCars.sort( (a,b) => b.score - a.score);
+    
+    console.log("previous score:",Number(highScore));
+    console.log("curr score:", smartCars[0].score);
 
-    if (!highScore || smartSorted[0].carsPassed < Number(highScore)) {
-        localStorage.setItem(STORAGE_BRAIN,JSON.stringify(smartSorted[0].brain));
-        localStorage.setItem(STORAGE_Y, String(smartSorted[0].carsPassed));
+    if (!highScore || smartCars[0].score > Number(highScore)) {
+        let newConstant : number = MUTATE_CONSTANT / 2;
+
+        localStorage.setItem(STORAGE_BRAIN,JSON.stringify(smartCars[0].brain));
+        localStorage.setItem(STORAGE_HIGH, String(smartCars[0].score));
+        localStorage.setItem(STORAGE_MUTATE, String(newConstant));
+    } else {
+        console.log("increasing mutate constant");
+        let newConstant : number = MUTATE_CONSTANT * (1 + MUTATE_STRICT);
+        localStorage.setItem(STORAGE_MUTATE, String(newConstant));
     }
 }
 
@@ -42,12 +62,11 @@ function generateCars(num : number) : Car[] {
     
     for (let i = 0; i < num; i++) {
         let brain : NeuralNetwork = JSON.parse(localStorage.getItem(STORAGE_BRAIN));
-        let car : Car = new Car(road.getLaneXval(2),1000,false,brain);
-        cars.push(car);
-
-        if (brain) {
+        if (i > 0 && brain) {
             NeuralNetwork.mutate(brain,MUTATE_CONSTANT);
         }
+        let car : Car = new Car(road.getLaneXval(2),1000,false,brain);
+        cars.push(car);
     }
     return cars;
 }
@@ -76,15 +95,12 @@ function animate() : void {
         }
 
         if (i == 0) {
-            ctx.globalAlpha = 1;
-            car.draw(ctx,true);
+            car.draw(ctx,DRAW_SENSORS);
         } else {
-            ctx.globalAlpha = 0.2;
             car.update(borders);
             car.draw(ctx,false);
         }
     }
-    ctx.globalAlpha = 1;
 
     road.draw(ctx);
     ctx.restore();
@@ -108,7 +124,12 @@ function areAllDead() : boolean {
 function discardBrain() : void {
     console.log("Discard")
     localStorage.removeItem(STORAGE_BRAIN);
-    localStorage.removeItem(STORAGE_Y);
+    localStorage.removeItem(STORAGE_HIGH);
+    startAgain();
+}
+
+function startAgain() {
+    location.reload();
 }
 
 animate()

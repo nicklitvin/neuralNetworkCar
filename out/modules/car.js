@@ -16,6 +16,7 @@ class Car {
         this.friction = 0.97;
         this.damaged = false;
         this.carsPassed = 0;
+        this.score = 0;
         this.location = new Coordinate(x, y);
         this.isDummy = isDummy;
         this.controls = new Controls(this.isDummy);
@@ -31,7 +32,7 @@ class Car {
                 this.brain = brain;
             }
             else {
-                this.networkNodeCounts = [this.sensor.rayCount, 10, 4];
+                this.networkNodeCounts = [this.sensor.rayCount, 6, 4];
                 this.brain = new NeuralNetwork(this.networkNodeCounts);
             }
         }
@@ -119,5 +120,16 @@ class Car {
         for (let i = 0; i < this.corners.length; i++) {
             this.borders.push(new Border(this.corners[i], this.corners[(i + 1) % this.corners.length]));
         }
+    }
+    calculatePerformance() {
+        let score = 0;
+        let exponent = 1;
+        let factors = 3;
+        score += exponent * (this.damaged ? 0 : factors - 1);
+        exponent *= factors;
+        score += exponent * Math.min(factors - 1, Math.max(0, -this.location.y / 100, factors));
+        exponent *= factors;
+        score += this.carsPassed;
+        this.score = score;
     }
 }
