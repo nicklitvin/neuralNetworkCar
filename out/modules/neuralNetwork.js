@@ -1,4 +1,5 @@
 class NeuralNetwork {
+    // private static maxMutationConstant : number = 5;
     constructor(neuronCounts) {
         this.levels = [];
         // TODO: assert reasonable counts

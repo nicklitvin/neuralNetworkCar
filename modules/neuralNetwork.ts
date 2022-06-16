@@ -1,5 +1,6 @@
 class NeuralNetwork {
     public levels : NeuronLevel[] = [];
+    // private static maxMutationConstant : number = 5;
 
     constructor(neuronCounts : number[]) {
         // TODO: assert reasonable counts

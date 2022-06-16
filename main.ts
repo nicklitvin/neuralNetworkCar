@@ -10,6 +10,7 @@ const DUMMY_CARS_NUM = 50;
 const MUTATE_GROWTH = 0.02;
 const TIME_LIMIT_SEC = 5;
 const DRAW_SENSORS = true;
+const MAX_MUTATE = 5;
 
 const STORAGE_DUMMIES = "dummyCars";
 const STORAGE_BRAIN = "bestBrain";
@@ -54,7 +55,7 @@ function saveBestBrain() {
         let failCount : number = Number(localStorage.getItem(STORAGE_FAIL));
 
         console.log("increasing mutate constant");
-        let newConstant : number = MUTATE_CONSTANT * ( (1 + MUTATE_GROWTH) ** failCount);
+        let newConstant : number = Math.min(MAX_MUTATE,MUTATE_CONSTANT * ( (1 + MUTATE_GROWTH) ** failCount));
         localStorage.setItem(STORAGE_MUTATE, String(newConstant));
         localStorage.setItem(STORAGE_FAIL, String(failCount + 1));
     }
@@ -82,7 +83,7 @@ function generateDummyCars(num : number) : Car[] {
     let lanesTaken : number[] = [];
 
     for (let i = 0; i < num; i++) {
-        if (lanesTaken.length > Math.floor(LANE_COUNT / 4)) {
+        if (lanesTaken.length > Math.floor(LANE_COUNT / 2)) {
             currY -= 200;
             lanesTaken = [];
         }
@@ -134,7 +135,7 @@ function animate() : void {
 
     if (areAllDead() || timeLimit) {
         saveBestBrain();
-        startAgain();
+        // startAgain();
     } else {
         requestAnimationFrame(animate)
     }
@@ -178,4 +179,3 @@ function loadDummies() : Car[] {
 }
 
 animate();
-

@@ -1,8 +1,8 @@
 class Sensor {
     constructor(car) {
-        this.rayCount = 4;
+        this.rayCount = 8;
         this.rayLength = 100;
-        this.raySpread = Math.PI;
+        this.raySpread = 3 * Math.PI / 2;
         this.rayColor = "yellow";
         this.rayColorIntersected = "black";
         this.rayWidth = 3;

@@ -1,9 +1,9 @@
 class Sensor {
     private car : Car;
 
-    public rayCount = 4;
+    public rayCount = 8;
     private rayLength = 100;
-    private raySpread = Math.PI;
+    private raySpread = 3 * Math.PI / 2;
 
     private rays: Border[];
     private rayColor = "yellow";
