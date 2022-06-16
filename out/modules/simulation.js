@@ -15,7 +15,7 @@ class Simulation {
         this.storageMutateKey = "mutationConstant";
         // adjustable values
         this.numSmartCars = 750;
-        this.numDummyCars = 10;
+        this.numDummyCars = 20;
         this.startY = 0;
         this.dummyHeadStart = 200;
         this.laneCount = 3;
@@ -28,10 +28,11 @@ class Simulation {
         this.roadBorder = 10;
         this.restartOnFinish = false;
         this.continuouslyRun = true;
-        this.maxDummyRowFill = 0.3;
+        this.maxDummyRowFill = 0.5;
         this.carYRelativeToCanvas = 0.8;
         this.dummySeparationY = 200;
         this.roadScreenLength = 50;
+        this.improvementMin = 1.02;
         this.timesUp = false;
         this.courseCompleted = false;
         this.lastTopScore = 0;
@@ -217,11 +218,11 @@ class Simulation {
      * in storage for better mutation process.
      */
     saveBestBrain() {
-        let highScore = localStorage.getItem(this.storageScoreKey);
         this.sortCarsByPerformance();
-        if (!highScore ||
-            this.smartCars[0].score > Number(highScore) ||
-            this.courseCompleted) {
+        let highScore = Number(localStorage.getItem(this.storageScoreKey));
+        let scoreToBeat = Number(highScore) * this.improvementMin;
+        let bestScore = this.smartCars[0].score;
+        if (!highScore || bestScore > scoreToBeat || this.courseCompleted) {
             let bestBrain = JSON.stringify(this.smartCars[0].brain);
             let mutationConstant = String(this.mutationConstant * this.mutationShrink);
             localStorage.setItem(this.storageBrainKey, bestBrain);
@@ -229,6 +230,7 @@ class Simulation {
             localStorage.setItem(this.storageFailKey, String(0));
         }
         else {
+            console.log("not enough improvement, increasing mutation");
             let failCount = Number(localStorage.getItem(this.storageFailKey));
             let newConstant = this.mutationConstant * ((1 + this.mutationGrowth) ** failCount);
             localStorage.setItem(this.storageMutateKey, String(newConstant));
@@ -257,16 +259,16 @@ class Simulation {
      */
     logStart() {
         console.log("mutation constant: ", this.mutationConstant);
-        console.log("previous score: ", localStorage.getItem(this.storageScoreKey));
+        console.log("previous best score: ", localStorage.getItem(this.storageScoreKey));
         console.log("failure streak: ", localStorage.getItem(this.storageFailKey));
+        console.log("==============");
     }
     /**
      * Logs results of simulation.
      */
     logResults() {
-        console.log("==============");
-        console.log("currScore: ", this.smartCars[0].score);
-        console.log("new Mutation Score: ", localStorage.getItem(this.storageMutateKey));
+        console.log("current best score: ", this.smartCars[0].score);
+        console.log("new mutation constant: ", localStorage.getItem(this.storageMutateKey));
         console.log("failure streak: ", localStorage.getItem(this.storageFailKey));
     }
     /**

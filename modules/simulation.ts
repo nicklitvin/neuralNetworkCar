@@ -15,7 +15,7 @@ class Simulation {
 
     // adjustable values
     private readonly numSmartCars = 750;
-    private readonly numDummyCars = 10;    
+    private readonly numDummyCars = 20;    
     private readonly startY = 0;
     private readonly dummyHeadStart = 200;
     private readonly laneCount = 3;
@@ -28,10 +28,11 @@ class Simulation {
     private readonly roadBorder = 10;
     private readonly restartOnFinish = false;
     private readonly continuouslyRun = true;
-    private readonly maxDummyRowFill = 0.3;
+    private readonly maxDummyRowFill = 0.5;
     private readonly carYRelativeToCanvas = 0.8;
     private readonly dummySeparationY = 200;
     private readonly roadScreenLength = 50;
+    private readonly improvementMin = 1.02;
     
     private timesUp = false;
     private courseCompleted = false;
@@ -267,13 +268,14 @@ class Simulation {
      * in storage for better mutation process.
      */
     private saveBestBrain() : void {
-        let highScore = localStorage.getItem(this.storageScoreKey);
         this.sortCarsByPerformance();
 
+        let highScore = Number(localStorage.getItem(this.storageScoreKey));
+        let scoreToBeat = Number(highScore) * this.improvementMin;
+        let bestScore = this.smartCars[0].score;
+
         if (
-            !highScore ||
-            this.smartCars[0].score > Number(highScore) ||
-            this.courseCompleted) 
+            !highScore || bestScore > scoreToBeat || this.courseCompleted) 
         {
             let bestBrain = JSON.stringify(this.smartCars[0].brain);
             let mutationConstant = 
@@ -284,6 +286,7 @@ class Simulation {
             localStorage.setItem(this.storageMutateKey, mutationConstant);
             localStorage.setItem(this.storageFailKey,String(0));
         } else {
+            console.log("not enough improvement, increasing mutation");
             let failCount = Number(
                 localStorage.getItem(this.storageFailKey)
             );
@@ -331,21 +334,21 @@ class Simulation {
      */
     private logStart() : void {
         console.log("mutation constant: ", this.mutationConstant);
-        console.log("previous score: ", 
+        console.log("previous best score: ", 
             localStorage.getItem(this.storageScoreKey)
         );
         console.log("failure streak: ", 
             localStorage.getItem(this.storageFailKey)
         );
+        console.log("==============")
     }
 
     /**
      * Logs results of simulation.
      */
     private logResults() : void {
-        console.log("==============")
-        console.log("currScore: ", this.smartCars[0].score);
-        console.log("new Mutation Score: ", 
+        console.log("current best score: ", this.smartCars[0].score);
+        console.log("new mutation constant: ", 
             localStorage.getItem(this.storageMutateKey)
         );
         console.log("failure streak: ", 
