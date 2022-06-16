@@ -1,3 +1,6 @@
+/**
+ * Holds coordinates of origin point and destination.
+ */
 class Border {
     public from : Coordinate;
     public to : Coordinate;

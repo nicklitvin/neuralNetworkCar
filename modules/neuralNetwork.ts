@@ -1,5 +1,10 @@
+/**
+ * A neural network consists of many neuron levels where input
+ * is loaded into the first neuron level and output is
+ * returned from the last neuron level. Can be muated.
+ */
 class NeuralNetwork {
-    public levels : NeuronLevel[] = [];
+    private levels : NeuronLevel[] = [];
     private static maxMutationConstant = 5;
 
     constructor(neuronCounts : number[]) {

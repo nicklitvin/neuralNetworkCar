@@ -1,3 +1,8 @@
+/**
+ * A neural network consists of many neuron levels where input
+ * is loaded into the first neuron level and output is
+ * returned from the last neuron level. Can be muated.
+ */
 class NeuralNetwork {
     constructor(neuronCounts) {
         this.levels = [];

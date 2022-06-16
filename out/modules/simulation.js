@@ -1,3 +1,10 @@
+/**
+ * Simulation class creates a simulation where smart cars
+ * controlled by a neural network make decisions to pass as
+ * many dummy cars on the road. The best results are saved
+ * and improved upon with mutations to achieve the smartest
+ * neural network.
+ */
 class Simulation {
     constructor(canvas) {
         // localStorageKeys
@@ -6,6 +13,7 @@ class Simulation {
         this.storageDummiesKey = "dummyCars";
         this.storageFailKey = "failCount";
         this.storageMutateKey = "mutationConstant";
+        // adjustable values
         this.numSmartCars = 250;
         this.numDummyCars = 20;
         this.startY = 0;
@@ -122,7 +130,8 @@ class Simulation {
     }
     /**
      * Runs simulation by updating canvas and status of all cars until
-     * all smart cars are damaged or the timer runs out.
+     * all smart cars are damaged or the timer runs out. If
+     * this.startAgain is true, starts the simulation again.
      */
     run() {
         this.smartCars.sort((a, b) => a.location.y - b.location.y);
@@ -193,9 +202,9 @@ class Simulation {
         return true;
     }
     /**
-     * Saves best brain in current simulation if score is greater than the
-     * saved score. Also updates other parameters in storage for better
-     * mutation process.
+     * Saves best brain in current simulation to local storage if score
+     * is greater than the saved score. Also updates other parameters
+     * in storage for better mutation process.
      */
     saveBestBrain() {
         let highScore = localStorage.getItem(this.storageScoreKey);
@@ -223,7 +232,7 @@ class Simulation {
         location.reload();
     }
     /**
-     * Create and save a traffic arrangement
+     * Create and save a traffic arrangement to local storage
      */
     newRoad() {
         let dummies = this.generateDummyCars();

@@ -1,6 +1,17 @@
+/**
+ * Contains function to calculate values regarding the intersection of
+ * two lines.
+ */
 class Intersect {
     constructor() { }
-    // Credit: Radu
+    /**
+     * Calculates percent of ray that exists before crossing the wall.
+     * Credit for formula: Radu Mariescu-Istodor
+     *
+     * @param ray
+     * @param wall
+     * @returns -1 if no interesection exists
+     */
     static getPercentUntilWall(ray, wall) {
         const A = ray.from;
         const B = ray.to;

@@ -1,8 +1,15 @@
+/**
+ * Neuron level consists of input nodes and output nodes
+ * such that all inputs are connected to all output nodes.
+ * Strength of connections and at which value nodes 
+ * light up is controlled by weights of connections and
+ * output thresholds.
+ */
 class NeuronLevel {
-    protected inputNodes : number[];
-    protected outputNodes : number[];
-    protected outputThresh : number[];
-    protected weights : number[][] = [];
+    private inputNodes : number[];
+    private outputNodes : number[];
+    private outputThresh : number[];
+    private weights : number[][] = [];
     
     private static maxVal = 3;
 
@@ -17,6 +24,12 @@ class NeuronLevel {
         NeuronLevel.randomize(this);
     }
 
+    /**
+     * Sets a random value in rnge [-1,1] to weights and 
+     * output threshold in level.
+     * 
+     * @param level to be randomized
+     */
     static randomize(level : NeuronLevel) : void {
         for (let i = 0; i < level.inputNodes.length; i++) {
             for (let j = 0; j < level.outputNodes.length; j++) {
@@ -28,6 +41,14 @@ class NeuronLevel {
         }
     }
 
+    /**
+     * Returns output of last neuron level by passing input values
+     * to neural network and going through all the neuron levels.
+     * 
+     * @param inputVals Values corresponding to first neuron level.
+     * @param level 
+     * @returns List of outputs in the last neuron level
+     */
     static feedForward(inputVals : number[], level : NeuronLevel) : number[] {
         for (let i = 0; i < level.inputNodes.length; i++) {
             level.inputNodes[i] = inputVals[i];
@@ -47,13 +68,31 @@ class NeuronLevel {
         return level.outputNodes;
     }
 
+
+    /**
+     * Changes thresholds of output nodes at which output will return 1
+     * constrained by constant where 0 is no mutation and 1 is a complete
+     * mutation.
+     * 
+     * @param level 
+     * @param constant 
+     */
     static mutateOutputThresh(level : NeuronLevel, constant : number) : void {
         for (let i = 0; i < level.outputThresh.length; i++) {
             level.outputThresh[i] += (Math.random() * 2 - 1) * constant;
             level.outputThresh[i] = this.normalizeValue(level.outputThresh[i]);
         }
     }
-    
+
+
+    /**
+     * Changes weights of all connections between inputs and outputs in
+     * neuron level constrained by constant where 0 is no mutation and 1
+     * is a complete mutation.
+     * 
+     * @param level 
+     * @param constant 
+     */
     static mutateWeights(level : NeuronLevel, constant : number) : void {
         for (let i = 0; i < level.weights.length; i++) {
             for (let j = 0; j < level.weights[i].length; j++) {
@@ -63,6 +102,12 @@ class NeuronLevel {
         }
     }
 
+    /**
+     * Reduces value to be within range of [-1*maxVal, maxVal] 
+     * 
+     * @param val 
+     * @returns normalized value
+     */
     static normalizeValue(val : number) : number {
         return Math.min(
             this.maxVal,

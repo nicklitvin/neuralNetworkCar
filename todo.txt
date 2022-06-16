@@ -11,5 +11,5 @@ log function in simulation class
 max mutation add to neuralnetwork
 stop simulation when all cars passed
 increase timer if same result
-
+create readme
 
