@@ -7,5 +7,6 @@ variant speeds
 stay in lane condition
 save brain in file
 add assertions for json.parse
+log function in simulation class
 
 

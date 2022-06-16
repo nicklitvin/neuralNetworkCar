@@ -2,9 +2,9 @@ class Simulation {
     // localStorageKeys
     private readonly storageBrainKey = "bestBrain";
     private readonly storageScoreKey = "bestScore";
-    private readonly storageDummies = "dummyCars";
-    private readonly storageFail = "failCount";
-    private readonly storageMutate = "mutationConstant";
+    private readonly storageDummiesKey = "dummyCars";
+    private readonly storageFailKey = "failCount";
+    private readonly storageMutateKey = "mutationConstant";
 
     private readonly numSmartCars = 250;
     private readonly numDummyCars = 20;    
@@ -17,6 +17,7 @@ class Simulation {
     private readonly timeLimit = 5;
     private readonly drawSensors = false;
     private readonly roadBorder = 10;
+    private readonly restartOnFinish = false;
     
     private timesUp = false;
     private canvas : HTMLCanvasElement;
@@ -40,8 +41,8 @@ class Simulation {
     }
 
     /**
-     * If brain stored in localstorage from previous session, cars are generated
-     * with the same brain but mutated by a mutation constant.
+     * If brain stored in localstorage from previous session, cars are
+     * generated with the same brain but mutated by a mutation constant.
      * 
      * Else, cars are generated with random brains.
      * 
@@ -51,7 +52,7 @@ class Simulation {
         let cars : Car[] = [];
 
         for (let i = 0; i < this.numSmartCars; i++) {
-            let brainText : string = localStorage.getItem(this.storageBrainKey);
+            let brainText = localStorage.getItem(this.storageBrainKey);
             let brain : NeuralNetwork = JSON.parse(brainText);
             
             if (i > 0 && brain) {
@@ -73,12 +74,15 @@ class Simulation {
      * @returns List of dummy cars
      */
     private generateDummyCars() : Car[] {
-        if (JSON.parse(localStorage.getItem(this.storageDummies)) == null) {
+        if (JSON.parse(
+            localStorage.getItem(this.storageDummiesKey)) == null) 
+        {
             this.createAndSaveDummyCars();
         }
 
         let cars : Car[] = [];
-        const dummies : Car[] = JSON.parse(localStorage.getItem(this.storageDummies));
+        let dummiesText = localStorage.getItem(this.storageDummiesKey);
+        const dummies : Car[] = JSON.parse(dummiesText);
 
         for (let dummy of dummies) {
             cars.push(new Car(dummy.location.x,dummy.location.y,true));    
@@ -111,7 +115,7 @@ class Simulation {
             cars.push(new Car(road.getLaneXval(lane + 1),currY));
         }
 
-        localStorage.setItem(this.storageDummies,JSON.stringify(cars));
+        localStorage.setItem(this.storageDummiesKey,JSON.stringify(cars));
     }
     
     /**
@@ -155,8 +159,10 @@ class Simulation {
         this.ctx.restore();
 
         if (this.areAllDead() || this.timesUp) {
-            // this.saveBestBrain();
-            // this.startAgain();
+            this.saveBestBrain();
+            if (this.restartOnFinish) {
+                this.startAgain();
+            }
         } else {
             requestAnimationFrame(this.run);
         }
@@ -212,5 +218,49 @@ class Simulation {
             }
         }
         return true;
+    }
+
+    /**
+     * Saves best brain in current simulation if score is greater than the 
+     * saved score. Also updates other parameters in storage for better
+     * mutation process.
+     */
+    private saveBestBrain() : void {
+        let highScore = localStorage.getItem(this.storageScoreKey);
+
+        this.smartCars.forEach(car => car.calculatePerformance());
+        this.smartCars.sort( (a,b) => b.score - a.score);
+
+        if (!highScore || smartCars[0].score > Number(highScore)) {
+            let bestBrain = JSON.stringify(smartCars[0].brain);
+            let mutationConstant = String(this.mutationConstant / 2);
+
+            localStorage.setItem(this.storageBrainKey,bestBrain);
+            localStorage.setItem(this.storageMutateKey, mutationConstant);
+            localStorage.setItem(STORAGE_FAIL,String(0));
+        } else {
+            let failCount = Number(
+                localStorage.getItem(this.storageFailKey)
+            );
+            let newConstant = Math.min(
+                MAX_MUTATE,
+                MUTATE_CONSTANT * ( (1 + this.mutationGrowth) ** failCount)
+            );
+    
+            localStorage.setItem(this.storageMutateKey, String(newConstant));
+            localStorage.setItem(this.storageFailKey, String(failCount + 1));
+        }
+    
+        localStorage.setItem(
+            this.storageScoreKey, String(smartCars[0].score)
+        );
+    }
+
+
+    /**
+     * Refreshes page.
+     */
+    private startAgain() : void {
+        location.reload();
     }
 }

@@ -3,9 +3,9 @@ class Simulation {
         // localStorageKeys
         this.storageBrainKey = "bestBrain";
         this.storageScoreKey = "bestScore";
-        this.storageDummies = "dummyCars";
-        this.storageFail = "failCount";
-        this.storageMutate = "mutationConstant";
+        this.storageDummiesKey = "dummyCars";
+        this.storageFailKey = "failCount";
+        this.storageMutateKey = "mutationConstant";
         this.numSmartCars = 250;
         this.numDummyCars = 20;
         this.startY = 0;
@@ -17,6 +17,7 @@ class Simulation {
         this.timeLimit = 5;
         this.drawSensors = false;
         this.roadBorder = 10;
+        this.restartOnFinish = false;
         this.timesUp = false;
         this.smartCars = [];
         this.dummyCars = [];
@@ -27,8 +28,8 @@ class Simulation {
         this.ctx = canvas.getContext("2d");
     }
     /**
-     * If brain stored in localstorage from previous session, cars are generated
-     * with the same brain but mutated by a mutation constant.
+     * If brain stored in localstorage from previous session, cars are
+     * generated with the same brain but mutated by a mutation constant.
      *
      * Else, cars are generated with random brains.
      *
@@ -55,11 +56,12 @@ class Simulation {
      * @returns List of dummy cars
      */
     generateDummyCars() {
-        if (JSON.parse(localStorage.getItem(this.storageDummies)) == null) {
+        if (JSON.parse(localStorage.getItem(this.storageDummiesKey)) == null) {
             this.createAndSaveDummyCars();
         }
         let cars = [];
-        const dummies = JSON.parse(localStorage.getItem(this.storageDummies));
+        let dummiesText = localStorage.getItem(this.storageDummiesKey);
+        const dummies = JSON.parse(dummiesText);
         for (let dummy of dummies) {
             cars.push(new Car(dummy.location.x, dummy.location.y, true));
         }
@@ -86,7 +88,7 @@ class Simulation {
             lanesTaken.push(lane);
             cars.push(new Car(road.getLaneXval(lane + 1), currY));
         }
-        localStorage.setItem(this.storageDummies, JSON.stringify(cars));
+        localStorage.setItem(this.storageDummiesKey, JSON.stringify(cars));
     }
     /**
      * Destroys localStorage. Use when program fails, usually due to user
@@ -122,8 +124,10 @@ class Simulation {
         this.road.draw(this.ctx);
         this.ctx.restore();
         if (this.areAllDead() || this.timesUp) {
-            // this.saveBestBrain();
-            // this.startAgain();
+            this.saveBestBrain();
+            if (this.restartOnFinish) {
+                this.startAgain();
+            }
         }
         else {
             requestAnimationFrame(this.run);
@@ -175,5 +179,35 @@ class Simulation {
             }
         }
         return true;
+    }
+    /**
+     * Saves best brain in current simulation if score is greater than the
+     * saved score. Also updates other parameters in storage for better
+     * mutation process.
+     */
+    saveBestBrain() {
+        let highScore = localStorage.getItem(this.storageScoreKey);
+        this.smartCars.forEach(car => car.calculatePerformance());
+        this.smartCars.sort((a, b) => b.score - a.score);
+        if (!highScore || smartCars[0].score > Number(highScore)) {
+            let bestBrain = JSON.stringify(smartCars[0].brain);
+            let mutationConstant = String(this.mutationConstant / 2);
+            localStorage.setItem(this.storageBrainKey, bestBrain);
+            localStorage.setItem(this.storageMutateKey, mutationConstant);
+            localStorage.setItem(STORAGE_FAIL, String(0));
+        }
+        else {
+            let failCount = Number(localStorage.getItem(this.storageFailKey));
+            let newConstant = Math.min(MAX_MUTATE, MUTATE_CONSTANT * ((1 + this.mutationGrowth) ** failCount));
+            localStorage.setItem(this.storageMutateKey, String(newConstant));
+            localStorage.setItem(this.storageFailKey, String(failCount + 1));
+        }
+        localStorage.setItem(this.storageScoreKey, String(smartCars[0].score));
+    }
+    /**
+     * Refreshes page.
+     */
+    startAgain() {
+        location.reload();
     }
 }
