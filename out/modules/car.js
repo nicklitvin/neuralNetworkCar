@@ -17,10 +17,10 @@ class Car {
         this.rotationSpeed = 0.05;
         this.yDistanceForPoint = 500;
         this.speed = 0;
-        this.carsPassed = 0;
         this.score = 0;
         this.angle = 0;
         this.damaged = false;
+        this.carsPassed = 0;
         this.isDummy = isDummy;
         this.location = new Coordinate(x, y);
         this.controls = new Controls(this.isDummy);

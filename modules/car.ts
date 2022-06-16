@@ -23,7 +23,6 @@ class Car {
     private sensor : Sensor;
     private controls: Controls;
     private speed = 0;
-    private carsPassed = 0;
 
     public location: Coordinate; // center of car
     public borders : Border[];
@@ -31,6 +30,7 @@ class Car {
     public score = 0;
     public angle = 0;
     public damaged = false;
+    public carsPassed = 0;
 
     constructor(
         x: number, y: number, isDummy = true,

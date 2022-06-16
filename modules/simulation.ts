@@ -23,7 +23,7 @@ class Simulation {
     private readonly mutationShrink = 0.5;
     private readonly mutationGrowth = 0.02
     private readonly defaultMutationConstant = 1.5;
-    private readonly timeLimit = 5;
+    private readonly progressCheckSec = 1.5;
     private readonly drawSensors = false;
     private readonly roadBorder = 10;
     private readonly restartOnFinish = false;
@@ -31,9 +31,11 @@ class Simulation {
     private readonly maxDummyRowFill = 0.3;
     private readonly carYRelativeToCanvas = 0.8;
     private readonly dummySeparationY = 200;
-    private readonly roadScreenLength = 10;
+    private readonly roadScreenLength = 50;
     
     private timesUp = false;
+    private courseCompleted = false;
+    private lastTopScore = 0;
     private canvas : HTMLCanvasElement;
     private ctx : CanvasRenderingContext2D;
     private smartCars : Car[] = [];
@@ -165,10 +167,26 @@ class Simulation {
     }
 
     /**
-     * Sets timer after which timer status is updated.
+     * Sets timer that stops when cars are not making any progress
+     * and alerts if no more progress can be made.
      */
     private setTimer() : void {
-        setTimeout( () => this.timesUp = true, this.timeLimit * 1000);
+        setTimeout( () => {
+            this.sortCarsByPerformance();
+            let bestCar = this.smartCars[0];
+
+            if (bestCar.carsPassed == this.numDummyCars) {
+                console.log("Course complete, create new road");
+                this.courseCompleted = true;
+                // localStorage.setItem(this.storageFailKey,String(-1));
+                this.timesUp = true;
+            } else if (bestCar.score > this.lastTopScore) {
+                this.lastTopScore = bestCar.score;
+                this.setTimer();
+            } else {
+                this.timesUp = true 
+            }
+        }, this.progressCheckSec * 1000);
     }
 
     /**
@@ -191,7 +209,7 @@ class Simulation {
         this.road.draw(this.ctx);
         this.ctx.restore();
 
-        if (this.areAllDead() || this.timesUp) {
+        if (this.timesUp) {
             this.saveBestBrain();
             this.logResults();
 
@@ -244,34 +262,23 @@ class Simulation {
     }
 
     /**
-     * @returns true if all smart cars are damaged
-     */
-    private areAllDead() : boolean {
-        for (let car of this.smartCars) {
-            if (!car.damaged) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
      * Saves best brain in current simulation to local storage if score
      * is greater than the saved score. Also updates other parameters
      * in storage for better mutation process.
      */
     private saveBestBrain() : void {
         let highScore = localStorage.getItem(this.storageScoreKey);
+        this.sortCarsByPerformance();
 
-        this.smartCars.forEach(car => car.calculatePerformance());
-        this.smartCars.sort( (a,b) => b.score - a.score);
-
-        if (!highScore || this.smartCars[0].score > Number(highScore)) {
+        if (
+            !highScore ||
+            this.smartCars[0].score > Number(highScore) ||
+            this.courseCompleted) 
+        {
             let bestBrain = JSON.stringify(this.smartCars[0].brain);
             let mutationConstant = 
                 String(this.mutationConstant * this.mutationShrink
             );
-            console.log("setting new mutation constant", mutationConstant);
 
             localStorage.setItem(this.storageBrainKey,bestBrain);
             localStorage.setItem(this.storageMutateKey, mutationConstant);
@@ -306,10 +313,16 @@ class Simulation {
     }
 
     /**
-     * Create and save a traffic arrangement to local storage
+     * Create and save a traffic arrangement to local storage.
+     * Reset best score for next map.
      */
     public newRoad() : void {
         this.createAndSaveDummyCars();
+        localStorage.setItem(this.storageScoreKey,String(0));
+        localStorage.setItem(
+            this.storageMutateKey,
+            String(this.defaultMutationConstant)
+        );
         this.startAgain();
     }
 
@@ -338,5 +351,14 @@ class Simulation {
         console.log("failure streak: ", 
             localStorage.getItem(this.storageFailKey)
         );
+    }
+
+    /**
+     * Sort cars by performance and save order. Cars passed is
+     * the most important attribute in scoring.
+     */
+    private sortCarsByPerformance() : void {
+        this.smartCars.forEach(car => car.calculatePerformance());
+        this.smartCars.sort( (a,b) => b.score - a.score);
     }
 }
