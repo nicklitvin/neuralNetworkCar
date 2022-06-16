@@ -52,18 +52,19 @@ class Car {
             this.sensor.draw(ctx);
         }
     }
-    update(borders = null) {
+    update(borders = null, dummyCars = null) {
         if (!this.damaged) {
             this.moveCar();
             this.updateCarCorners();
             this.updateCarBorders();
-        }
-        if (!this.isDummy) {
-            this.sensor.update(borders);
-            this.updateDamage(borders);
-            const offsets = this.sensor.getRayValues().map(x => 1 - x);
-            const out = NeuralNetwork.feedForward(offsets, this.brain);
-            this.controls.applyInput(out);
+            if (!this.isDummy) {
+                this.updateCarsPassed(dummyCars);
+                this.sensor.update(borders);
+                this.updateDamage(borders);
+                const offsets = this.sensor.getRayValues().map(x => 1 - x);
+                const out = NeuralNetwork.feedForward(offsets, this.brain);
+                this.controls.applyInput(out);
+            }
         }
     }
     updateCarsPassed(dummyCars) {

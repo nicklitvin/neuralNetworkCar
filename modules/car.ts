@@ -74,20 +74,21 @@ class Car {
         }
     }  
     
-    update(borders : Border[] = null) : void {
+    update(borders : Border[] = null, dummyCars : Car[] = null) : void {
         if (!this.damaged) {
             this.moveCar();
             this.updateCarCorners();
             this.updateCarBorders();
-        }
-
-        if (!this.isDummy) {
-            this.sensor.update(borders);
-            this.updateDamage(borders);
-
-            const offsets : number[] = this.sensor.getRayValues().map(x => 1-x);
-            const out : number[] = NeuralNetwork.feedForward(offsets,this.brain);
-            this.controls.applyInput(out);
+            
+            if (!this.isDummy) {
+                this.updateCarsPassed(dummyCars);
+                this.sensor.update(borders);
+                this.updateDamage(borders);
+    
+                const offsets : number[] = this.sensor.getRayValues().map(x => 1-x);
+                const out : number[] = NeuralNetwork.feedForward(offsets,this.brain);
+                this.controls.applyInput(out);
+            }
         }
     }
 

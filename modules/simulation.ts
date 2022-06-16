@@ -14,13 +14,29 @@ class Simulation {
     private readonly startLane = 2;
     private readonly mutationGrowth = 0.02
     private readonly mutationConstant = 1.5;
-
+    private readonly timeLimit = 5;
+    private readonly drawSensors = false;
+    private readonly roadBorder = 10;
+    
+    private timesUp = false;
+    private canvas : HTMLCanvasElement;
+    private ctx : CanvasRenderingContext2D;
     private smartCars : Car[] = [];
     private dummyCars : Car[] = [];
+    private road : Road;
 
-    constructor() {
+    constructor(canvas : HTMLCanvasElement) {
         this.smartCars = this.generateSmartCars();
         this.dummyCars = this.generateDummyCars();
+        this.road = new Road(
+            this.canvas.width/2,
+            this.canvas.height/2,
+            this.canvas.width - this.roadBorder * 2,
+            this.canvas.height * 100,
+            this.laneCount
+        );
+        this.canvas = canvas;
+        this.ctx = canvas.getContext("2d");
     }
 
     /**
@@ -104,5 +120,97 @@ class Simulation {
      */
     static destroyAll() : void {
         localStorage.clear();
+    }
+
+    /**
+     * Starts simulation by setting a timer and calling the run function.
+     */
+    start() : void {
+        this.setTimer();
+        this.run();
+    }
+
+    /**
+     * Sets timer after which timer status is updated.
+     */
+    private setTimer() : void {
+        setTimeout( () => this.timesUp = true, this.timeLimit * 1000);
+    }
+
+    /**
+     * Runs simulation by updating canvas and status of all cars until
+     * all smart cars are damaged or the timer runs out.
+     */
+    private run () : void {
+        this.smartCars.sort( (a,b) => a.location.y - b.location.y);
+        this.canvas.height = window.innerHeight;
+        this.ctx.save();
+        this.ctx.translate(
+            0,-smartCars[0].location.y + this.canvas.height * 0.8
+        );
+
+        this.moveDummyCars();
+        this.moveDrawSmartCars();
+        this.road.draw(this.ctx);
+        this.ctx.restore();
+
+        if (this.areAllDead() || this.timesUp) {
+            // this.saveBestBrain();
+            // this.startAgain();
+        } else {
+            requestAnimationFrame(this.run);
+        }
+    }
+
+    /**
+     * Moves and draws all cars in this.dummyCars.
+     */
+    private moveDummyCars() : void {
+        for (let car of this.dummyCars) {
+            car.update();
+            car.draw(this.ctx,false);
+        }
+    }
+
+    /**
+     * @returns borders of walls and dummyCars
+     */
+    private getBorders() : Border[] {
+        let borders : Border[] = road.borders;
+        for (let car of this.dummyCars) {
+            borders = borders.concat(car.borders);
+        }
+        return borders;
+    }
+
+    /**
+     * Moves and draws all cars in this.smartCars.
+     */
+    private moveDrawSmartCars() : void {
+        let borders = this.getBorders();
+        let first = true;
+
+        for (let car of this.smartCars) {
+            car.update(borders,this.dummyCars);
+    
+            if (first) {
+                car.draw(ctx,this.drawSensors);
+                first = false;
+            } else {
+                car.draw(ctx,false);
+            }
+        }
+    }
+
+    /**
+     * @returns true if all smart cars are damaged
+     */
+    private areAllDead() : boolean {
+        for (let car of this.smartCars) {
+            if (!car.damaged) {
+                return false;
+            }
+        }
+        return true;
     }
 }
