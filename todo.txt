@@ -1,4 +1,5 @@
-TODO
+make nicer user interface
+add max speed approach without drawing
 make smarter mutation technique
 rate location on curve for score
 determine if time to terminate timer based on activity
@@ -8,5 +9,4 @@ save brain in file
 add assertions for json.parse
 stop simulation when all cars passed
 increase timer if same result
-create readme
 

@@ -18,7 +18,7 @@ class Car {
         this.speed = 0;
         this.carsPassed = 0;
         this.score = 0;
-        this.angle = 0; // 0 = ->, -pi = <-
+        this.angle = 0;
         this.damaged = false;
         this.isDummy = isDummy;
         this.location = new Coordinate(x, y);
@@ -37,8 +37,6 @@ class Car {
             }
             else {
                 this.brain = new NeuralNetwork(this.sensor.rayCount, this.controls.numControls);
-                // this.networkNodeCounts = [this.sensor.rayCount,6,this.controls.numControls]
-                // this.brain = new NeuralNetwork(this.networkNodeCounts);
             }
         }
     }

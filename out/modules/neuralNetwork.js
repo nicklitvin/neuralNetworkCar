@@ -5,6 +5,7 @@
  */
 class NeuralNetwork {
     constructor(inputNodes, outputNodes) {
+        // adjustable
         this.neuronLevelNodeCounts = [10];
         this.levels = [];
         let allLevels = [inputNodes].concat(this.neuronLevelNodeCounts).
@@ -13,14 +14,6 @@ class NeuralNetwork {
             this.levels.push(new NeuronLevel(allLevels[i], allLevels[i + 1]));
         }
     }
-    // constructor(neuronCounts : number[]) {
-    //     // TODO: assert reasonable counts
-    //     for (let i = 0; i < neuronCounts.length - 1; i++) {
-    //         this.levels.push(
-    //             new NeuronLevel(neuronCounts[i],neuronCounts[i+1])
-    //         );
-    //     }
-    // }
     /**
      * Calculates value of each output node given network configurations.
      *
