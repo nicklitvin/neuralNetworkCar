@@ -1,42 +1,53 @@
+/**
+ * Car object that can be controlled and moved.
+ */
 class Car {
     constructor(x, y, isDummy = true, brain = null) {
-        // size
+        // adjustables
+        this.dummyColor = "red";
+        this.playerColor = "blue";
+        this.damagedColor = "black";
         this.width = 30;
         this.height = 50;
-        this.damagedColor = "black";
-        // 0 = ->, -pi = <-
-        this.angle = 0;
-        this.rotationSpeed = 0.05;
-        // speed: negative = forward, positive = backward
-        this.speed = 0;
         this.acceleration = 0.2;
         this.zeroSpeedThresh = 0.01;
         this.maxDummySpeed = 2;
-        this.maxSpeed = 3;
+        this.maxPlayerSpeed = 4;
         this.friction = 0.97;
-        this.damaged = false;
+        this.rotationSpeed = 0.05;
+        this.speed = 0;
         this.carsPassed = 0;
         this.score = 0;
-        this.location = new Coordinate(x, y);
+        this.angle = 0; // 0 = ->, -pi = <-
+        this.damaged = false;
         this.isDummy = isDummy;
+        this.location = new Coordinate(x, y);
         this.controls = new Controls(this.isDummy);
         if (this.isDummy) {
             this.maxSpeed = this.maxDummySpeed;
-            this.color = "red";
+            this.color = this.dummyColor;
         }
         else {
-            this.color = "blue";
+            this.maxSpeed = this.maxPlayerSpeed;
+            this.color = this.playerColor;
             this.sensor = new Sensor(this);
             this.sensor.update();
             if (brain) {
                 this.brain = brain;
             }
             else {
-                this.networkNodeCounts = [this.sensor.rayCount, 6, 4];
-                this.brain = new NeuralNetwork(this.networkNodeCounts);
+                this.brain = new NeuralNetwork(this.sensor.rayCount, this.controls.numControls);
+                // this.networkNodeCounts = [this.sensor.rayCount,6,this.controls.numControls]
+                // this.brain = new NeuralNetwork(this.networkNodeCounts);
             }
         }
     }
+    /**
+     * Draws car based on corners and sensors if exists and specified.
+     *
+     * @param ctx 2d context of canvas
+     * @param drawSensors true/false
+     */
     draw(ctx, drawSensors) {
         ctx.fillStyle = this.color;
         if (this.damaged) {
@@ -52,6 +63,13 @@ class Car {
             this.sensor.draw(ctx);
         }
     }
+    /**
+     * Updates Car's location and state if not damaged. Dummy cars
+     * don't need obstacles and list of dummy cars.
+     *
+     * @param borders list of all obstacles, default is null
+     * @param dummyCars list of dummy cars, default is null
+     */
     update(borders = null, dummyCars = null) {
         if (!this.damaged) {
             this.moveCar();
@@ -67,6 +85,11 @@ class Car {
             }
         }
     }
+    /**
+     * Updates number of dummy cars that have been passed by this car.
+     *
+     * @param dummyCars list of all dummy cars
+     */
     updateCarsPassed(dummyCars) {
         this.carsPassed = 0;
         for (let car of dummyCars) {
@@ -75,24 +98,37 @@ class Car {
             }
         }
     }
+    /**
+     * Updates car's damaged state to true if collision with obstacle
+     * detected.
+     *
+     * @param borders of all obstacles to consider
+     * @returns nothing if intersection found early
+     */
     updateDamage(borders) {
         if (!this.damaged) {
             for (let corner of this.corners) {
                 let line = new Border(this.location, corner);
-                for (let border of borders)
+                for (let border of borders) {
                     if (Intersect.getPercentUntilWall(line, border) >= 0) {
                         this.damaged = true;
                         return;
                     }
+                }
             }
         }
     }
+    /**
+     * Move car's location based on speed and other factors.
+     */
     moveCar() {
         if (Math.abs(this.speed) > 0) {
-            if (this.controls.left)
+            if (this.controls.left) {
                 this.angle -= this.rotationSpeed * Math.sign(-this.speed);
-            if (this.controls.right)
+            }
+            if (this.controls.right) {
                 this.angle += this.rotationSpeed * Math.sign(-this.speed);
+            }
         }
         if (this.controls.forward)
             this.speed -= this.acceleration;
@@ -106,6 +142,9 @@ class Car {
         this.location.x -= this.speed * Math.cos(this.angle - Math.PI / 2);
         this.location.y -= this.speed * Math.sin(this.angle - Math.PI / 2);
     }
+    /**
+     * Updates car's corners based on location and angle of car.
+     */
     updateCarCorners() {
         let corners = [];
         const radius = Math.hypot(this.width / 2, this.height / 2);
@@ -116,12 +155,21 @@ class Car {
         corners.push(new Coordinate(this.location.x - Math.sin(-this.angle + angle + Math.PI) * radius, this.location.y - Math.cos(-this.angle + angle + Math.PI) * radius));
         this.corners = corners;
     }
+    /**
+     * Updates car borders based on its corners.
+     */
     updateCarBorders() {
         this.borders = [];
         for (let i = 0; i < this.corners.length; i++) {
             this.borders.push(new Border(this.corners[i], this.corners[(i + 1) % this.corners.length]));
         }
     }
+    /**
+     * Calculates car performance based on the following parameters
+     * in descending order of importance:
+     *
+     * dummy cars passed, y distance traveled forward, no damaged
+     */
     calculatePerformance() {
         let score = 0;
         let exponent = 1;

@@ -51,7 +51,9 @@ class Simulation {
         );
 
         this.mutationConstant = this.defaultMutationConstant;
-        let savedMutationConstant = localStorage.getItem(this.storageMutateKey);
+        let savedMutationConstant = localStorage.getItem(
+            this.storageMutateKey
+        );
         if (savedMutationConstant) {
             this.mutationConstant = Number(savedMutationConstant);
         }
@@ -114,7 +116,6 @@ class Simulation {
     /**
      * Create "numDummyCars" dummy cars such that it is possible to pass
      * them.
-     * 
      */
     private createAndSaveDummyCars() : void {
         let currY = this.startY - this.dummyHeadStart;
@@ -277,8 +278,12 @@ class Simulation {
                     (1 + this.mutationGrowth) ** failCount
             );
     
-            localStorage.setItem(this.storageMutateKey, String(newConstant));
-            localStorage.setItem(this.storageFailKey, String(failCount + 1));
+            localStorage.setItem(this.storageMutateKey,
+                String(newConstant)
+            );
+            localStorage.setItem(this.storageFailKey,
+                String(failCount + 1)
+            );
         }
     
         localStorage.setItem(

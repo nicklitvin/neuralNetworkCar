@@ -61,13 +61,14 @@ class NeuronLevel {
      * constrained by constant where 0 is no mutation and 1 is a complete
      * mutation.
      *
-     * @param level
-     * @param constant
+     * @param level neuron level that is to be mutated
+     * @param constant representing strength of mutation [0,1]
      */
     static mutateOutputThresh(level, constant) {
         for (let i = 0; i < level.outputThresh.length; i++) {
             level.outputThresh[i] += (Math.random() * 2 - 1) * constant;
-            level.outputThresh[i] = this.normalizeValue(level.outputThresh[i]);
+            level.outputThresh[i] =
+                this.normalizeValue(level.outputThresh[i]);
         }
     }
     /**
@@ -82,7 +83,8 @@ class NeuronLevel {
         for (let i = 0; i < level.weights.length; i++) {
             for (let j = 0; j < level.weights[i].length; j++) {
                 level.weights[i][j] += (Math.random() * 2 - 1) * constant;
-                level.weights[i][j] = this.normalizeValue(level.weights[i][j]);
+                level.weights[i][j] =
+                    this.normalizeValue(level.weights[i][j]);
             }
         }
     }

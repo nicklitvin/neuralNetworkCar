@@ -1,8 +1,13 @@
+/**
+ * Controls in 4 directions that can change based on user or automated
+ * input.
+ */
 class Controls {
-    public left : boolean = false;
-    public right : boolean = false;
-    public forward : boolean = false;
-    public reverse : boolean = false;
+    public left = false;
+    public right = false;
+    public forward = false;
+    public reverse = false;
+    public numControls = 4;
 
     constructor(isDummy : boolean) {
         if (isDummy) {
@@ -12,6 +17,9 @@ class Controls {
         }
     }
 
+    /**
+     * Adds keyboard listeners for user manual control with WASD.
+     */
     private addKeyboardListeners() : void{
         document.onkeydown = (event) => {
             switch (event.key) {
@@ -47,6 +55,12 @@ class Controls {
         }
     }
 
+    /**
+     * Sets controls to true or false based on value at index.
+     * [forward,reverse,left,right] 
+     * 
+     * @param input [] of length 4 with 0s and 1s
+     */
     applyInput(input : number[]) : void {
         input[0] == 1 ? this.forward = true : this.forward = false;
         input[1] == 1 ? this.reverse = true : this.reverse = false;
@@ -54,6 +68,9 @@ class Controls {
         input[3] == 1 ? this.right = true : this.right = false;
     }
 
+    /**
+     * @returns true if moving, opposite moves cancel out
+     */
     isMoving() : boolean {
         return true;
         // if ( (this.left != this.right) || (this.forward != this.reverse)) {

@@ -4,13 +4,23 @@
  * returned from the last neuron level. Can be muated.
  */
 class NeuralNetwork {
-    constructor(neuronCounts) {
+    constructor(inputNodes, outputNodes) {
+        this.neuronLevelNodeCounts = [10];
         this.levels = [];
-        // TODO: assert reasonable counts
-        for (let i = 0; i < neuronCounts.length - 1; i++) {
-            this.levels.push(new NeuronLevel(neuronCounts[i], neuronCounts[i + 1]));
+        let allLevels = [inputNodes].concat(this.neuronLevelNodeCounts).
+            concat(outputNodes);
+        for (let i = 0; i < allLevels.length - 1; i++) {
+            this.levels.push(new NeuronLevel(allLevels[i], allLevels[i + 1]));
         }
     }
+    // constructor(neuronCounts : number[]) {
+    //     // TODO: assert reasonable counts
+    //     for (let i = 0; i < neuronCounts.length - 1; i++) {
+    //         this.levels.push(
+    //             new NeuronLevel(neuronCounts[i],neuronCounts[i+1])
+    //         );
+    //     }
+    // }
     /**
      * Calculates value of each output node given network configurations.
      *
@@ -26,7 +36,8 @@ class NeuralNetwork {
         return outputs;
     }
     /**
-     * Mutate network's output thresholds and weights constrained by constant.
+     * Mutate network's output thresholds and weights constrained
+     * by constant.
      *
      * @param network
      * @param constant

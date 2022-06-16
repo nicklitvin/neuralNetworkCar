@@ -1,13 +1,23 @@
+/**
+ * Sensor is attached to car and consists of spread out rays
+ * where each ray can detect the distance until obstacle.
+ */
 class Sensor {
     constructor(car) {
-        this.rayCount = 8;
+        // adjustable
         this.rayLength = 100;
         this.raySpread = 3 * Math.PI / 2;
         this.rayColor = "yellow";
         this.rayColorIntersected = "black";
         this.rayWidth = 3;
+        this.rayCount = 8;
         this.car = car;
     }
+    /**
+     * Updates where car's sensors are located on the canvas
+     *
+     * @param borders of all obstacles for sensor to consider
+     */
     update(borders = []) {
         this.rays = [];
         this.borders = borders;
@@ -16,11 +26,19 @@ class Sensor {
         let angle = this.car.angle - this.raySpread / 2;
         for (let i = 1; i <= this.rayCount; i++) {
             angle += angleSplit;
-            let endCoordinate = new Coordinate(this.car.location.x + Math.cos(angle - Math.PI / 2) * this.rayLength, this.car.location.y + Math.sin(angle - Math.PI / 2) * this.rayLength);
+            let endCoordinate = new Coordinate(this.car.location.x + Math.cos(angle - Math.PI / 2) *
+                this.rayLength, this.car.location.y + Math.sin(angle - Math.PI / 2) *
+                this.rayLength);
             let newRay = new Border(currCordinate, endCoordinate);
             this.rays.push(newRay);
         }
     }
+    /**
+     * Draws rays on canvas in two colors, one before collision
+     * with obstacle and one after collision.
+     *
+     * @param ctx 2d context of canvas
+     */
     draw(ctx) {
         ctx.lineWidth = this.rayWidth;
         for (let ray of this.rays) {
@@ -39,6 +57,9 @@ class Sensor {
             ctx.stroke();
         }
     }
+    /**
+     * @returns distance of each ray to closest obstacle
+     */
     getRayValues() {
         let result = [];
         for (let ray of this.rays) {
@@ -46,6 +67,10 @@ class Sensor {
         }
         return result;
     }
+    /**
+     * @param ray in question
+     * @returns shortest distance to obstacle
+     */
     getShortestPercent(ray) {
         let distance = 1;
         for (let border of this.borders) {

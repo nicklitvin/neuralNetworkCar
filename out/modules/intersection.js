@@ -8,9 +8,9 @@ class Intersect {
      * Calculates percent of ray that exists before crossing the wall.
      * Credit for formula: Radu Mariescu-Istodor
      *
-     * @param ray
-     * @param wall
-     * @returns -1 if no interesection exists
+     * @param ray line to be intersected
+     * @param wall to be intersected
+     * @returns -1 if no interesection exists else percent of ray
      */
     static getPercentUntilWall(ray, wall) {
         const A = ray.from;

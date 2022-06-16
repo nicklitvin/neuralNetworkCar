@@ -86,7 +86,6 @@ class Simulation {
     /**
      * Create "numDummyCars" dummy cars such that it is possible to pass
      * them.
-     *
      */
     createAndSaveDummyCars() {
         let currY = this.startY - this.dummyHeadStart;

@@ -1,26 +1,36 @@
+/**
+ * Sensor is attached to car and consists of spread out rays
+ * where each ray can detect the distance until obstacle.
+ */
 class Sensor {
+    // adjustable
+    private readonly rayLength = 100;
+    private readonly raySpread = 3 * Math.PI / 2;
+    private readonly rayColor = "yellow";
+    private readonly rayColorIntersected = "black";
+    private readonly rayWidth = 3;
+    public readonly rayCount = 8;
+
     private car : Car;
-
-    public rayCount = 8;
-    private rayLength = 100;
-    private raySpread = 3 * Math.PI / 2;
-
-    private rays: Border[];
-    private rayColor = "yellow";
-    private rayColorIntersected = "black";
-    private rayWidth = 3;
-
     private borders : Border[];
-
+    private rays: Border[];
+    
     constructor(car : Car) {
         this.car = car;
     }
 
+    /**
+     * Updates where car's sensors are located on the canvas
+     * 
+     * @param borders of all obstacles for sensor to consider
+     */
     update(borders : Border[] = []) : void {
         this.rays = [];
         this.borders = borders;
 
-        let currCordinate = new Coordinate(this.car.location.x,this.car.location.y);
+        let currCordinate = new Coordinate(
+            this.car.location.x,this.car.location.y
+        );
         let angleSplit = this.raySpread / (this.rayCount + 1); 
         let angle = this.car.angle - this.raySpread / 2; 
 
@@ -28,8 +38,10 @@ class Sensor {
             angle += angleSplit;
 
             let endCoordinate = new Coordinate(
-                this.car.location.x + Math.cos(angle - Math.PI/2) * this.rayLength,
-                this.car.location.y + Math.sin(angle - Math.PI/2) * this.rayLength
+                this.car.location.x + Math.cos(angle - Math.PI/2) *
+                    this.rayLength,
+                this.car.location.y + Math.sin(angle - Math.PI/2) * 
+                    this.rayLength
             );
 
             let newRay = new Border(currCordinate,endCoordinate);
@@ -37,6 +49,12 @@ class Sensor {
         }
     }
 
+    /**
+     * Draws rays on canvas in two colors, one before collision 
+     * with obstacle and one after collision.
+     * 
+     * @param ctx 2d context of canvas
+     */
     draw(ctx : CanvasRenderingContext2D) : void{
         ctx.lineWidth = this.rayWidth;
 
@@ -60,6 +78,9 @@ class Sensor {
         }
     }
 
+    /**
+     * @returns distance of each ray to closest obstacle
+     */
     getRayValues() : number[] {
         let result : number[] = [];
         for (let ray of this.rays) {
@@ -68,6 +89,10 @@ class Sensor {
         return result;
     }
 
+    /**
+     * @param ray in question
+     * @returns shortest distance to obstacle
+     */
     private getShortestPercent(ray : Border) : number{
         let distance = 1;
         for (let border of this.borders) {

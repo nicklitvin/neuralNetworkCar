@@ -1,22 +1,24 @@
 class Road {
+    // adjustable
+    private readonly borderColor = "white";
+    private readonly borderWidth = 5;
+    private readonly laneBorderColor = "white";
+    private readonly laneBorderWidth = 2;
+    private readonly laneBorderDashes = [20,20];
+
     private left : number;
     private top : number;
     private width : number;
     private height : number;
     private lanes : number;
-
     private laneWidth : number;
 
     public borders : Border[] = [];
 
-    private borderColor = "white";
-    private borderWidth = 5;
-
-    private laneBorderColor = "white";
-    private laneBorderWidth = 2;
-    private laneBorderDashes = [20,20];
-
-    constructor(xCenter : number, yCenter : number, width : number, height : number, lanes : number) {
+    constructor(
+        xCenter : number, yCenter : number, width : number,
+        height : number, lanes : number) 
+    {
         this.left = xCenter - width / 2;
         this.top = yCenter - height / 2;
         this.width = width;
@@ -37,6 +39,11 @@ class Road {
         this.laneWidth = this.width / (this.lanes);
     }
 
+    /**
+     * Draws road.
+     * 
+     * @param ctx 2d context of canvas
+     */
     draw(ctx : CanvasRenderingContext2D) : void {
         ctx.lineWidth = this.laneBorderWidth;
         ctx.strokeStyle = this.laneBorderColor;
@@ -71,6 +78,7 @@ class Road {
     getLaneXval(lane : number) : number {
         lane = Math.min(this.lanes,Math.max(1,lane));
 
-        return this.left + this.laneWidth / 2 + this.laneWidth * (lane - 1);
+        return this.left + this.laneWidth / 2 + this.laneWidth *
+            (lane - 1);
     }
 }

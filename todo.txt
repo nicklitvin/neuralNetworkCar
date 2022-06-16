@@ -1,14 +1,11 @@
 TODO
 make smarter mutation technique
-add comments, clean public/private
 rate location on curve for score
 determine if time to terminate timer based on activity
 variant speeds
 stay in lane condition
 save brain in file
 add assertions for json.parse
-log function in simulation class
-max mutation add to neuralnetwork
 stop simulation when all cars passed
 increase timer if same result
 create readme

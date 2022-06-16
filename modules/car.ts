@@ -1,61 +1,70 @@
+/**
+ * Car object that can be controlled and moved.
+ */
 class Car {
-    // center of car
-    public location: Coordinate;
-    public corners : Coordinate[];
-    public borders : Border[];
-
-    // size
-    private width: number = 30;
-    private height: number = 50;
-
-    // cosmetics
+    // adjustables
+    private readonly dummyColor = "red";
+    private readonly playerColor = "blue";
+    private readonly damagedColor = "black";
+    private readonly width = 30;
+    private readonly height = 50;
+    private readonly acceleration = 0.2;
+    private readonly zeroSpeedThresh = 0.01;
+    private readonly maxDummySpeed = 2;
+    private readonly maxPlayerSpeed = 4;
+    private readonly friction = 0.97;
+    private readonly rotationSpeed = 0.05;
+    
+    private maxSpeed : number;
     private color : string;
-    private damagedColor = "black";
-
-    // 0 = ->, -pi = <-
-    public angle : number = 0;
-    private rotationSpeed : number = 0.05;
-
-    // speed: negative = forward, positive = backward
-    private speed : number = 0;
-    private acceleration : number = 0.2;
-    private zeroSpeedThresh : number = 0.01;
-    private maxDummySpeed : number = 2;
-    private maxSpeed : number = 3;
-    private friction : number = 0.97;
-
-    // controls
-    public sensor : Sensor;
-    public controls: Controls;
-    public damaged = false;
     private isDummy : boolean;
+    private corners : Coordinate[];
+    private sensor : Sensor;
+    private controls: Controls;
+    private speed = 0;
+    private carsPassed = 0;
+
+    public location: Coordinate; // center of car
+    public borders : Border[];
     public brain : NeuralNetwork;
-    private networkNodeCounts : number[];
+    public score = 0;
+    public angle = 0;
+    public damaged = false;
 
-    public carsPassed : number = 0;
-    public score : number = 0;
-
-    constructor(x: number, y: number, isDummy = true, brain : NeuralNetwork = null) {
-        this.location = new Coordinate(x,y);
+    constructor(
+        x: number, y: number, isDummy = true,
+        brain : NeuralNetwork = null) 
+    {
         this.isDummy = isDummy;
+        this.location = new Coordinate(x,y);
         this.controls = new Controls(this.isDummy);
 
         if (this.isDummy) {
             this.maxSpeed = this.maxDummySpeed;
-            this.color = "red";
+            this.color = this.dummyColor;
         } else {
-            this.color = "blue";
+            this.maxSpeed = this.maxPlayerSpeed;
+            this.color = this.playerColor;
             this.sensor = new Sensor(this);
             this.sensor.update();
+
             if (brain) {
                 this.brain = brain;
             } else {
-                this.networkNodeCounts = [this.sensor.rayCount,6,4]
-                this.brain = new NeuralNetwork(this.networkNodeCounts);
+                this.brain = new NeuralNetwork(
+                    this.sensor.rayCount,
+                    this.controls.numControls
+                );
             }    
         }
     }
 
+    /**
+     * Draws car based on corners and sensors if exists and specified.
+     * 
+     * @param ctx 2d context of canvas
+     * @param drawSensors true/false
+     */
     draw(ctx: CanvasRenderingContext2D, drawSensors : boolean) : void {
         ctx.fillStyle = this.color;
         if (this.damaged) {
@@ -74,6 +83,13 @@ class Car {
         }
     }  
     
+    /**
+     * Updates Car's location and state if not damaged. Dummy cars
+     * don't need obstacles and list of dummy cars.
+     * 
+     * @param borders list of all obstacles, default is null
+     * @param dummyCars list of dummy cars, default is null
+     */
     update(borders : Border[] = null, dummyCars : Car[] = null) : void {
         if (!this.damaged) {
             this.moveCar();
@@ -85,14 +101,19 @@ class Car {
                 this.sensor.update(borders);
                 this.updateDamage(borders);
     
-                const offsets : number[] = this.sensor.getRayValues().map(x => 1-x);
-                const out : number[] = NeuralNetwork.feedForward(offsets,this.brain);
+                const offsets = this.sensor.getRayValues().map(x => 1-x);
+                const out = NeuralNetwork.feedForward(offsets,this.brain);
                 this.controls.applyInput(out);
             }
         }
     }
 
-    updateCarsPassed(dummyCars : Car[]) : void{
+    /**
+     * Updates number of dummy cars that have been passed by this car.
+     * 
+     * @param dummyCars list of all dummy cars
+     */
+    private updateCarsPassed(dummyCars : Car[]) : void{
         this.carsPassed = 0;
         for (let car of dummyCars) {
             if (this.location.y < car.location.y) {
@@ -101,23 +122,38 @@ class Car {
         }
     }
 
+    /**
+     * Updates car's damaged state to true if collision with obstacle
+     * detected.
+     * 
+     * @param borders of all obstacles to consider
+     * @returns nothing if intersection found early
+     */
     private updateDamage(borders : Border[]) : void{
         if (!this.damaged) {
             for (let corner of this.corners) {
                 let line = new Border(this.location,corner);
-                for (let border of borders)
-                if (Intersect.getPercentUntilWall(line,border) >= 0) {
-                    this.damaged = true;
-                    return;
+                for (let border of borders) {
+                    if (Intersect.getPercentUntilWall(line,border) >= 0) {
+                        this.damaged = true;
+                        return;
+                    }
                 }
             }
         }
     }
 
+    /**
+     * Move car's location based on speed and other factors.
+     */
     private moveCar() : void {
         if (Math.abs(this.speed) > 0) {
-            if (this.controls.left) this.angle -= this.rotationSpeed * Math.sign(-this.speed);
-            if (this.controls.right) this.angle += this.rotationSpeed * Math.sign(-this.speed);
+            if (this.controls.left) {
+                this.angle -= this.rotationSpeed * Math.sign(-this.speed);
+            }
+            if (this.controls.right) {
+                this.angle += this.rotationSpeed * Math.sign(-this.speed);
+            } 
         }
         if (this.controls.forward) this.speed -= this.acceleration;
         if (this.controls.reverse) this.speed += this.acceleration;
@@ -132,6 +168,9 @@ class Car {
         this.location.y -= this.speed * Math.sin(this.angle - Math.PI/2);
     }
 
+    /**
+     * Updates car's corners based on location and angle of car.
+     */
     private updateCarCorners() : void {
         let corners = [];
         const radius = Math.hypot(this.width/2,this.height/2);
@@ -156,22 +195,39 @@ class Car {
         this.corners = corners;
     }
 
+    /**
+     * Updates car borders based on its corners.
+     */
     private updateCarBorders() : void {
         this.borders = [];
         for (let i = 0; i < this.corners.length; i++) {
-            this.borders.push(new Border(this.corners[i],this.corners[(i+1) % this.corners.length]));
+            this.borders.push(
+                new Border(
+                    this.corners[i],
+                    this.corners[(i+1) % this.corners.length]
+                )
+            );
         }
     }
 
+    /**
+     * Calculates car performance based on the following parameters
+     * in descending order of importance:
+     * 
+     * dummy cars passed, y distance traveled forward, no damaged
+     */
     public calculatePerformance () : void {
-        let score : number = 0;
-        let exponent : number = 1;
-        let factors : number = 3;
+        let score = 0;
+        let exponent = 1;
+        let factors = 3;
 
         score += exponent * (this.damaged ? 0 : factors - 1);
         exponent *= factors;
 
-        score += exponent * Math.min(factors - 1, Math.max(0,-this.location.y / 100,factors));
+        score += exponent * Math.min(
+            factors - 1,
+            Math.max(0,-this.location.y / 100,factors)
+        );
         exponent *= factors;
 
         score += this.carsPassed;
