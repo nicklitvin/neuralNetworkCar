@@ -6,7 +6,7 @@
 class NeuralNetwork {
     constructor(inputNodes, outputNodes) {
         // adjustable
-        this.neuronLevelNodeCounts = [10];
+        this.neuronLevelNodeCounts = [6, 6];
         this.levels = [];
         let allLevels = [inputNodes].concat(this.neuronLevelNodeCounts).
             concat(outputNodes);
@@ -32,8 +32,8 @@ class NeuralNetwork {
      * Mutate network's output thresholds and weights constrained
      * by constant.
      *
-     * @param network
-     * @param constant
+     * @param network network to be mutated
+     * @param constant factor by which to mutate neural network
      */
     static mutate(network, constant) {
         constant = Math.min(constant, this.maxMutationConstant);

@@ -1,3 +1,5 @@
+increase timer if same result
+
 make nicer user interface
 add max speed approach without drawing
 make smarter mutation technique
@@ -8,5 +10,4 @@ stay in lane condition
 save brain in file
 add assertions for json.parse
 stop simulation when all cars passed
-increase timer if same result
 

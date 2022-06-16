@@ -10,10 +10,11 @@ class Car {
     private readonly height = 50;
     private readonly acceleration = 0.2;
     private readonly zeroSpeedThresh = 0.01;
-    private readonly maxDummySpeed = 2;
-    private readonly maxPlayerSpeed = 4;
+    private readonly maxDummySpeed = 0;
+    private readonly maxPlayerSpeed = 3;
     private readonly friction = 0.97;
     private readonly rotationSpeed = 0.05;
+    private readonly yDistanceForPoint = 500;
     
     private maxSpeed : number;
     private color : string;
@@ -226,7 +227,7 @@ class Car {
 
         score += exponent * Math.min(
             factors - 1,
-            Math.max(0,-this.location.y / 100,factors)
+            Math.max(0,-this.location.y / this.yDistanceForPoint)
         );
         exponent *= factors;
 

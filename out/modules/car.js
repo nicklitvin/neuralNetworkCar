@@ -11,10 +11,11 @@ class Car {
         this.height = 50;
         this.acceleration = 0.2;
         this.zeroSpeedThresh = 0.01;
-        this.maxDummySpeed = 2;
-        this.maxPlayerSpeed = 4;
+        this.maxDummySpeed = 0;
+        this.maxPlayerSpeed = 3;
         this.friction = 0.97;
         this.rotationSpeed = 0.05;
+        this.yDistanceForPoint = 500;
         this.speed = 0;
         this.carsPassed = 0;
         this.score = 0;
@@ -174,7 +175,7 @@ class Car {
         let factors = 3;
         score += exponent * (this.damaged ? 0 : factors - 1);
         exponent *= factors;
-        score += exponent * Math.min(factors - 1, Math.max(0, -this.location.y / 100, factors));
+        score += exponent * Math.min(factors - 1, Math.max(0, -this.location.y / this.yDistanceForPoint));
         exponent *= factors;
         score += this.carsPassed;
         this.score = score;

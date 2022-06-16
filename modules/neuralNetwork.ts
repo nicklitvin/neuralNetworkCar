@@ -5,7 +5,7 @@
  */
 class NeuralNetwork {
     // adjustable
-    private readonly neuronLevelNodeCounts = [10]
+    private readonly neuronLevelNodeCounts = [6,6]
     private static readonly maxMutationConstant = 5;
 
     private levels : NeuronLevel[] = [];
@@ -42,8 +42,8 @@ class NeuralNetwork {
      * Mutate network's output thresholds and weights constrained
      * by constant.
      * 
-     * @param network 
-     * @param constant 
+     * @param network network to be mutated
+     * @param constant factor by which to mutate neural network 
      */
     static mutate(network : NeuralNetwork, constant : number) : void {
         constant = Math.min(constant, this.maxMutationConstant);
