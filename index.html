@@ -5,10 +5,11 @@
 </head>
 <body>
     <canvas id="myCanvas"></canvas>
-    <button onclick="discardBrain()">reset brain</button><br>
-    <button onclick="startAgain()">start again</button>
-    <button onclick="newRoad()">new road</button>
+    <button onclick = "destroyAll()">destroy</button>
+    <button onclick = "newRoad()">new road</button>
+    <button onclick = "startAgain()">start again</button>
 
+    <script src="./out/modules/simulation.js"></script>
     <script src="/out/modules/neuralNetwork.js"></script>
     <script src="./out/modules/neuronLevel.js"></script>
     <script src="out/modules/intersection.js"></script>

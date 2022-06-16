@@ -13,11 +13,14 @@ class Simulation {
     private readonly laneCount = 3;
     private readonly startLane = 2;
     private readonly mutationGrowth = 0.02
-    private readonly mutationConstant = 1.5;
-    private readonly timeLimit = 5;
+    private readonly defaultMutationConstant = 1.5;
+    private readonly timeLimit = 10;
     private readonly drawSensors = false;
     private readonly roadBorder = 10;
     private readonly restartOnFinish = false;
+    private readonly continuouslyRun = true;
+    private readonly maxDummyRowFill = 0.5;
+    private readonly carYRelativeToCanvas = 0.8;
     
     private timesUp = false;
     private canvas : HTMLCanvasElement;
@@ -25,10 +28,12 @@ class Simulation {
     private smartCars : Car[] = [];
     private dummyCars : Car[] = [];
     private road : Road;
+    private mutationConstant : number;
 
     constructor(canvas : HTMLCanvasElement) {
-        this.smartCars = this.generateSmartCars();
-        this.dummyCars = this.generateDummyCars();
+        this.canvas = canvas;
+        this.ctx = canvas.getContext("2d");
+
         this.road = new Road(
             this.canvas.width/2,
             this.canvas.height/2,
@@ -36,8 +41,15 @@ class Simulation {
             this.canvas.height * 100,
             this.laneCount
         );
-        this.canvas = canvas;
-        this.ctx = canvas.getContext("2d");
+
+        this.mutationConstant = this.defaultMutationConstant;
+        let savedMutationConstant = localStorage.getItem(this.storageMutateKey);
+        if (savedMutationConstant) {
+            this.mutationConstant = Number(savedMutationConstant);
+        }
+
+        this.smartCars = this.generateSmartCars();
+        this.dummyCars = this.generateDummyCars();
     }
 
     /**
@@ -59,7 +71,8 @@ class Simulation {
                 NeuralNetwork.mutate(brain,this.mutationConstant);
             }
             let car = new Car(
-                road.getLaneXval(this.startLane),this.startY,false,brain
+                this.road.getLaneXval(this.startLane),
+                this.startY,false,brain
             );
             cars.push(car);
         }
@@ -101,7 +114,10 @@ class Simulation {
         let lanesTaken : number[] = [];
     
         for (let i = 0; i < this.numDummyCars; i++) {
-            if (lanesTaken.length > Math.floor(this.laneCount / 4)) {
+            
+            if (lanesTaken.length > Math.floor(
+                this.laneCount * this.maxDummyRowFill))
+            {
                 currY -= 200;
                 lanesTaken = [];
             }
@@ -112,7 +128,7 @@ class Simulation {
             }
             lanesTaken.push(lane);
     
-            cars.push(new Car(road.getLaneXval(lane + 1),currY));
+            cars.push(new Car(this.road.getLaneXval(lane + 1),currY));
         }
 
         localStorage.setItem(this.storageDummiesKey,JSON.stringify(cars));
@@ -124,12 +140,14 @@ class Simulation {
      */
     static destroyAll() : void {
         localStorage.clear();
+        startAgain();
     }
 
     /**
      * Starts simulation by setting a timer and calling the run function.
      */
     start() : void {
+        this.logStart();
         this.setTimer();
         this.run();
     }
@@ -150,7 +168,9 @@ class Simulation {
         this.canvas.height = window.innerHeight;
         this.ctx.save();
         this.ctx.translate(
-            0,-smartCars[0].location.y + this.canvas.height * 0.8
+            0,
+            -this.smartCars[0].location.y +
+            this.canvas.height * this.carYRelativeToCanvas
         );
 
         this.moveDummyCars();
@@ -160,11 +180,13 @@ class Simulation {
 
         if (this.areAllDead() || this.timesUp) {
             this.saveBestBrain();
+            this.logResults();
+
             if (this.restartOnFinish) {
                 this.startAgain();
             }
-        } else {
-            requestAnimationFrame(this.run);
+        } else if (this.continuouslyRun) {
+            requestAnimationFrame(this.run.bind(this));
         }
     }
 
@@ -182,7 +204,7 @@ class Simulation {
      * @returns borders of walls and dummyCars
      */
     private getBorders() : Border[] {
-        let borders : Border[] = road.borders;
+        let borders : Border[] = this.road.borders;
         for (let car of this.dummyCars) {
             borders = borders.concat(car.borders);
         }
@@ -200,10 +222,10 @@ class Simulation {
             car.update(borders,this.dummyCars);
     
             if (first) {
-                car.draw(ctx,this.drawSensors);
+                car.draw(this.ctx,this.drawSensors);
                 first = false;
             } else {
-                car.draw(ctx,false);
+                car.draw(this.ctx,false);
             }
         }
     }
@@ -231,20 +253,19 @@ class Simulation {
         this.smartCars.forEach(car => car.calculatePerformance());
         this.smartCars.sort( (a,b) => b.score - a.score);
 
-        if (!highScore || smartCars[0].score > Number(highScore)) {
-            let bestBrain = JSON.stringify(smartCars[0].brain);
+        if (!highScore || this.smartCars[0].score > Number(highScore)) {
+            let bestBrain = JSON.stringify(this.smartCars[0].brain);
             let mutationConstant = String(this.mutationConstant / 2);
 
             localStorage.setItem(this.storageBrainKey,bestBrain);
             localStorage.setItem(this.storageMutateKey, mutationConstant);
-            localStorage.setItem(STORAGE_FAIL,String(0));
+            localStorage.setItem(this.storageFailKey,String(0));
         } else {
             let failCount = Number(
                 localStorage.getItem(this.storageFailKey)
             );
-            let newConstant = Math.min(
-                MAX_MUTATE,
-                MUTATE_CONSTANT * ( (1 + this.mutationGrowth) ** failCount)
+            let newConstant = this.mutationConstant * (
+                    (1 + this.mutationGrowth) ** failCount
             );
     
             localStorage.setItem(this.storageMutateKey, String(newConstant));
@@ -252,7 +273,7 @@ class Simulation {
         }
     
         localStorage.setItem(
-            this.storageScoreKey, String(smartCars[0].score)
+            this.storageScoreKey, String(this.smartCars[0].score)
         );
     }
 
@@ -260,7 +281,43 @@ class Simulation {
     /**
      * Refreshes page.
      */
-    private startAgain() : void {
+    public startAgain() : void {
         location.reload();
+    }
+
+    /**
+     * Create and save a traffic arrangement 
+     */
+    public newRoad() : void {
+        let dummies = this.generateDummyCars();
+        localStorage.setItem(
+            this.storageDummiesKey,JSON.stringify(dummies)
+        );
+        this.startAgain();
+    }
+
+    /**
+     * Logs initial data.
+     */
+    private logStart() : void {
+        console.log("mutation constant: ", this.mutationConstant);
+        console.log("previous score: ", 
+            localStorage.getItem(this.storageScoreKey)
+        );
+        console.log("failure streak: ", 
+            localStorage.getItem(this.storageFailKey)
+        );
+    }
+
+    /**
+     * Logs results of simulation.
+     */
+    private logResults() : void {
+        console.log("==============")
+        console.log("currScore: ", this.smartCars[0].score);
+        console.log("new Mutation Score: ", this.mutationConstant);
+        console.log("failure streak: ", 
+            localStorage.getItem(this.storageFailKey)
+        );
     }
 }
