@@ -5,12 +5,12 @@
 class Sensor {
     constructor(car) {
         // adjustable
-        this.rayLength = 100;
-        this.raySpread = 3 * Math.PI / 2;
+        this.rayLength = 200;
+        this.raySpread = 2 * Math.PI;
         this.rayColor = "yellow";
         this.rayColorIntersected = "black";
         this.rayWidth = 3;
-        this.rayCount = 8;
+        this.rayCount = 10;
         this.car = car;
     }
     /**

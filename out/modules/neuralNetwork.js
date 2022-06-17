@@ -6,7 +6,7 @@
 class NeuralNetwork {
     constructor(inputNodes, outputNodes) {
         // adjustable
-        this.neuronLevelNodeCounts = [6, 6];
+        this.neuronLevelNodeCounts = [10, 12, 10];
         this.levels = [];
         let allLevels = [inputNodes].concat(this.neuronLevelNodeCounts).
             concat(outputNodes);

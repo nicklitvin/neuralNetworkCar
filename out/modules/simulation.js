@@ -13,28 +13,37 @@ class Simulation {
         this.storageDummiesKey = "dummyCars";
         this.storageFailKey = "failCount";
         this.storageMutateKey = "mutationConstant";
+        // adjustable values for fast develop
+        this.defaultDummyYSeperation = 200;
+        this.defaultMutationConstant = 1.5;
+        this.defaultDummyRowFill = 0.4;
         // adjustable values
         this.numSmartCars = 100;
-        this.numDummyCars = 10;
         this.startY = 0;
-        this.dummyHeadStart = 200;
-        this.laneCount = 3;
-        this.startLane = 2;
         this.mutationShrink = 0.5;
-        this.mutationGrowth = 0.02;
-        this.defaultMutationConstant = 1.5;
+        this.mutationGrowth = 1.02;
+        this.minMutationConstant = 0.05;
         this.maxMutationConstant = 5;
         this.progressCheckSec = 1.5;
-        this.speedProgressCheckRuns = 60 * 20 + 1;
         this.drawSensors = false;
         this.roadBorder = 10;
         this.restartOnFinish = false;
         this.continuouslyRun = true;
-        this.maxDummyRowFill = 0.7;
         this.carYRelativeToCanvas = 0.8;
-        this.dummySeparationY = 200;
         this.roadScreenLength = 50;
         this.improvementMin = 1.02;
+        this.dummyDistanceShrink = 0.9;
+        this.dummyCountGrowth = 1.5;
+        this.completesToAddDifficulty = 2;
+        this.completesToIncreaseRowFill = 30;
+        // adjustable values
+        this.startLane = 2;
+        this.dummyYSeperation = 200;
+        this.maxDummyRowFill = 0.4;
+        this.speedMaxRuns = 60 * 20;
+        this.laneCount = 3;
+        this.numDummyCars = 10;
+        this.dummyHeadStart = 200;
         this.timesUp = false;
         this.courseCompleted = false;
         this.lastTopScore = 0;
@@ -104,7 +113,7 @@ class Simulation {
         let lanesTaken = [];
         for (let i = 0; i < this.numDummyCars; i++) {
             if (lanesTaken.length + 1 > Math.floor(this.laneCount * this.maxDummyRowFill)) {
-                currY -= this.dummySeparationY;
+                currY -= this.dummyYSeperation;
                 lanesTaken = [];
             }
             let lane = Math.floor((Math.random() * this.laneCount));
@@ -134,7 +143,7 @@ class Simulation {
     start() {
         this.logStart();
         if (this.isSpeedRun) {
-            while (this.speedRunsCounter < this.speedProgressCheckRuns) {
+            while (this.speedRunsCounter < this.speedMaxRuns) {
                 if (this.speedRunsCounter % 60 == 0) {
                     this.updateSimulationStatus();
                 }
@@ -169,7 +178,7 @@ class Simulation {
             this.courseCompleted = true;
             this.timesUp = true;
         }
-        else if (bestCar.score > this.lastTopScore) {
+        else if (bestCar.score > this.lastTopScore * this.improvementMin) {
             this.lastTopScore = bestCar.score;
             if (!this.isSpeedRun)
                 this.setTimer();
@@ -184,7 +193,6 @@ class Simulation {
      * this.startAgain is true, starts the simulation again.
      */
     run() {
-        console.log("RUN");
         this.smartCars.sort((a, b) => a.location.y - b.location.y);
         if (!this.isSpeedRun) {
             this.canvas.height = window.innerHeight;
@@ -277,9 +285,13 @@ class Simulation {
     saveBestBrain() {
         console.log("saving best brain");
         let bestBrain = JSON.stringify(this.smartCars[0].brain);
-        let mutationConstant = String(this.mutationConstant * this.mutationShrink);
+        let mutationConstant = this.mutationConstant * this.mutationShrink;
+        if (mutationConstant < this.minMutationConstant) {
+            mutationConstant = this.defaultMutationConstant;
+            console.log("mutation constant too low, reseting value");
+        }
         localStorage.setItem(this.storageBrainKey, bestBrain);
-        localStorage.setItem(this.storageMutateKey, mutationConstant);
+        localStorage.setItem(this.storageMutateKey, String(mutationConstant));
         localStorage.setItem(this.storageFailKey, String(0));
     }
     /**
@@ -291,7 +303,7 @@ class Simulation {
     increaseMutationConstant() {
         console.log("not enough improvement, increasing mutation");
         let failCount = Number(localStorage.getItem(this.storageFailKey));
-        let newConstant = this.mutationConstant * ((1 + this.mutationGrowth) ** failCount);
+        let newConstant = this.mutationConstant * (this.mutationGrowth ** failCount);
         if (newConstant > this.maxMutationConstant) {
             newConstant = this.defaultMutationConstant;
             console.log("mutation constant too high, reseting value");
@@ -341,17 +353,66 @@ class Simulation {
         this.smartCars.forEach(car => car.calculatePerformance(this.dummyCars));
         this.smartCars.sort((a, b) => b.score - a.score);
     }
+    /**
+     * Runs simulation many times, gradually increasing difficulty.
+     * Brain is saved to localstorage as usual.
+     *
+     * @param canvas for proper visuals after development
+     */
     static speedBrainDevelopment(canvas) {
         let cycle = 0;
+        let coursesCompleted = 0;
         while (cycle < Simulation.brainDevelopmentCycles) {
             console.log("CYCLE", cycle);
             let simulation = new Simulation(true, canvas);
             simulation.start();
             if (simulation.courseCompleted) {
+                coursesCompleted++;
+                if (coursesCompleted %
+                    simulation.completesToAddDifficulty == 0) {
+                    simulation.increaseDifficulty(coursesCompleted);
+                }
                 simulation.newRoad();
             }
             cycle++;
         }
     }
+    /**
+     * Increases difficulty of new road based on complete count.
+     */
+    increaseDifficulty(completed) {
+        if (completed % this.completesToIncreaseRowFill == 0) {
+            let newFill = this.maxDummyRowFill + 1 / this.laneCount;
+            if (newFill < 1) {
+                this.maxDummyRowFill += 1 / this.laneCount;
+                this.dummyYSeperation = this.defaultDummyYSeperation *
+                    this.maxDummyRowFill * this.laneCount;
+            }
+            else {
+                this.laneCount += 1;
+                this.maxDummyRowFill = this.defaultDummyRowFill;
+                this.dummyYSeperation = this.defaultDummyYSeperation;
+            }
+        }
+        else {
+            let choices = 3;
+            let choice = Math.floor(Math.random() * choices - 0.001);
+            switch (choice) {
+                case 0: {
+                    this.startLane = (this.startLane + 1) & this.laneCount;
+                    break;
+                }
+                case 1: {
+                    this.dummyYSeperation *= this.dummyDistanceShrink;
+                    break;
+                }
+                case 2: {
+                    this.numDummyCars *= this.dummyCountGrowth;
+                    this.speedMaxRuns *= this.dummyCountGrowth;
+                    break;
+                }
+            }
+        }
+    }
 }
-Simulation.brainDevelopmentCycles = 10;
+Simulation.brainDevelopmentCycles = 100;
