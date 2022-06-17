@@ -6,8 +6,6 @@
 class NeuralNetwork {
     // adjustable
     private readonly neuronLevelNodeCounts = [6,6]
-    private static readonly maxMutationConstant = 5;
-
     private levels : NeuronLevel[] = [];
 
     constructor(inputNodes : number, outputNodes : number) {
@@ -46,7 +44,6 @@ class NeuralNetwork {
      * @param constant factor by which to mutate neural network 
      */
     static mutate(network : NeuralNetwork, constant : number) : void {
-        constant = Math.min(constant, this.maxMutationConstant);
         for (let level of network.levels) {
             NeuronLevel.mutateOutputThresh(level, constant);
             NeuronLevel.mutateWeights(level, constant);

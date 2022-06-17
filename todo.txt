@@ -1,9 +1,7 @@
-normalize car scoring relative to other cars
-normalize mutation constant past X
+speed run evolution without visuals
 
 add max speed approach without drawing
 make nicer user interface
-rate location on curve for score
 variant dummy speeds
 stay in lane condition
 save brain in file

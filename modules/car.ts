@@ -212,26 +212,26 @@ class Car {
     }
 
     /**
-     * Calculates car performance based on the following parameters
-     * in descending order of importance:
+     * Calculates car performance on a curve based on the
+     * following parameters in descending order of importance:
      * 
      * dummy cars passed, y distance traveled forward, no damaged
      */
-    public calculatePerformance () : void {
+    public calculatePerformance (dummyCars : Car[]) : void {
         let score = 0;
         let exponent = 1;
-        let factors = 3;
+        let base = 2;
 
-        score += exponent * (this.damaged ? 0 : factors - 1);
-        exponent *= factors;
+        let damageScore = this.damaged ? 0 : 1;
+        score += exponent * damageScore;
+        exponent *= base;
 
-        score += exponent * Math.min(
-            factors - 1,
-            Math.max(0,-this.location.y / this.yDistanceForPoint)
-        );
-        exponent *= factors;
+        let distanceScore = Math.max(0,this.location.y / dummyCars[0].location.y);
+        score += exponent * distanceScore;
+        exponent *= base;
 
-        score += this.carsPassed;
+        let passedScore = this.carsPassed / dummyCars.length;
+        score += exponent * passedScore;
         
         this.score = score;
     }

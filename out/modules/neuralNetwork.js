@@ -36,11 +36,9 @@ class NeuralNetwork {
      * @param constant factor by which to mutate neural network
      */
     static mutate(network, constant) {
-        constant = Math.min(constant, this.maxMutationConstant);
         for (let level of network.levels) {
             NeuronLevel.mutateOutputThresh(level, constant);
             NeuronLevel.mutateWeights(level, constant);
         }
     }
 }
-NeuralNetwork.maxMutationConstant = 5;

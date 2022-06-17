@@ -23,6 +23,7 @@ class Simulation {
     private readonly mutationShrink = 0.5;
     private readonly mutationGrowth = 0.02
     private readonly defaultMutationConstant = 1.5;
+    private readonly maxMutationConstant = 5;
     private readonly progressCheckSec = 1.5;
     private readonly drawSensors = false;
     private readonly roadBorder = 10;
@@ -146,6 +147,8 @@ class Simulation {
             cars.push(new Car(this.road.getLaneXval(lane + 1),currY));
         }
 
+        cars = cars.sort( (a,b) => a.location.y - b.location.y);
+
         localStorage.setItem(this.storageDummiesKey,JSON.stringify(cars));
     }
     
@@ -211,7 +214,7 @@ class Simulation {
         this.ctx.restore();
 
         if (this.timesUp) {
-            this.saveBestBrain();
+            this.resolveSimulation();
             this.logResults();
 
             if (this.restartOnFinish) {
@@ -263,11 +266,12 @@ class Simulation {
     }
 
     /**
-     * Saves best brain in current simulation to local storage if score
-     * is greater than the saved score. Also updates other parameters
-     * in storage for better mutation process.
+     * If best score in this simulation is greater than the saved high
+     * score, updates saved brain.
+     * 
+     * Else increases mutation constant.
      */
-    private saveBestBrain() : void {
+    private resolveSimulation() : void {
         this.sortCarsByPerformance();
 
         let highScore = Number(localStorage.getItem(this.storageScoreKey));
@@ -277,29 +281,9 @@ class Simulation {
         if (
             !highScore || bestScore > scoreToBeat || this.courseCompleted) 
         {
-            let bestBrain = JSON.stringify(this.smartCars[0].brain);
-            let mutationConstant = 
-                String(this.mutationConstant * this.mutationShrink
-            );
-
-            localStorage.setItem(this.storageBrainKey,bestBrain);
-            localStorage.setItem(this.storageMutateKey, mutationConstant);
-            localStorage.setItem(this.storageFailKey,String(0));
+            this.saveBestBrain();
         } else {
-            console.log("not enough improvement, increasing mutation");
-            let failCount = Number(
-                localStorage.getItem(this.storageFailKey)
-            );
-            let newConstant = this.mutationConstant * (
-                    (1 + this.mutationGrowth) ** failCount
-            );
-    
-            localStorage.setItem(this.storageMutateKey,
-                String(newConstant)
-            );
-            localStorage.setItem(this.storageFailKey,
-                String(failCount + 1)
-            );
+            this.increaseMutationConstant();
         }
     
         localStorage.setItem(
@@ -307,6 +291,48 @@ class Simulation {
         );
     }
 
+    /**
+     * Reduces mutation constant and saves brain with other variables to
+     * localstorage.
+     */
+    private saveBestBrain() : void {
+        console.log("saving best brain");
+        let bestBrain = JSON.stringify(this.smartCars[0].brain);
+        let mutationConstant = 
+            String(this.mutationConstant * this.mutationShrink
+        );
+
+        localStorage.setItem(this.storageBrainKey,bestBrain);
+        localStorage.setItem(this.storageMutateKey, mutationConstant);
+        localStorage.setItem(this.storageFailKey,String(0));
+    }
+
+    /**
+     * Increases mutation constant depending on growth constant and 
+     * number of consecutive failures to progress, but resets to 
+     * default when greater than the max allowed value. Saves
+     * constant and fails to localstorage.
+     */
+    private increaseMutationConstant() : void {
+        console.log("not enough improvement, increasing mutation");
+        let failCount = Number(
+            localStorage.getItem(this.storageFailKey)
+        );
+        let newConstant = this.mutationConstant * (
+                (1 + this.mutationGrowth) ** failCount
+        );
+        if (newConstant > this.maxMutationConstant) {
+            newConstant = this.defaultMutationConstant;
+            console.log("mutation constant too high, reseting value");
+        }
+
+        localStorage.setItem(this.storageMutateKey,
+            String(newConstant)
+        );
+        localStorage.setItem(this.storageFailKey,
+            String(failCount + 1)
+        );
+    }
 
     /**
      * Refreshes page.
@@ -347,6 +373,7 @@ class Simulation {
      * Logs results of simulation.
      */
     private logResults() : void {
+        console.log("==============")
         console.log("current best score: ", this.smartCars[0].score);
         console.log("new mutation constant: ", 
             localStorage.getItem(this.storageMutateKey)
@@ -361,7 +388,9 @@ class Simulation {
      * the most important attribute in scoring.
      */
     private sortCarsByPerformance() : void {
-        this.smartCars.forEach(car => car.calculatePerformance());
+        this.smartCars.forEach(car => car.calculatePerformance(
+            this.dummyCars
+        ));
         this.smartCars.sort( (a,b) => b.score - a.score);
     }
 }
