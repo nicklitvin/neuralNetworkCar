@@ -6,8 +6,6 @@ class Car {
     private readonly dummyColor = "red";
     private readonly playerColor = "blue";
     private readonly damagedColor = "black";
-    private readonly width = 30;
-    private readonly height = 50;
     private readonly acceleration = 0.2;
     private readonly zeroSpeedThresh = 0.01;
     private readonly maxDummySpeed = 0;
@@ -22,6 +20,8 @@ class Car {
     private sensor : Sensor;
     public controls: Controls; // move to private
     private speed = 0;
+    private width = 30;
+    private height = 50;
 
     public location: Coordinate; // center of car
     public borders : Border[];
@@ -32,12 +32,15 @@ class Car {
     public carsPassed = 0;
 
     constructor(
-        x: number, y: number, isDummy = true,
+        x: number, y: number, width: number, height: number,
+        isDummy = true,
         brain : NeuralNetwork = null) 
     {
         this.isDummy = isDummy;
         this.location = new Coordinate(x,y);
         this.controls = new Controls(this.isDummy);
+        this.width = width;
+        this.height = height;
 
         if (this.isDummy) {
             this.maxSpeed = this.maxDummySpeed;

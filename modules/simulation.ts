@@ -23,10 +23,10 @@ class Simulation {
     private readonly startY = 0;
     private readonly mutationShrink = 0.5;
     private readonly mutationGrowth = 1.02;
-    private readonly minMutationConstant = 0.05;
-    private readonly maxMutationConstant = 5;
+    private readonly minMutationConstant = 0.1;
+    private readonly maxMutationConstant = 3;
     private readonly progressCheckSec = 1.5;
-    private readonly drawSensors = false;
+    private readonly drawSensors = true;
     private readonly roadBorder = 10;
     private readonly restartOnFinish = false;
     private readonly continuouslyRun = true;
@@ -37,17 +37,21 @@ class Simulation {
     private readonly dummyCountGrowth = 1.5;
     private readonly completesToAddDifficulty = 2;
     private readonly completesToIncreaseRowFill = 30; 
+    private readonly carWidthToLaneWidth = 0.6;
+    private readonly carHeightToLaneWidth = 0.9;
 
     // adjustable values
-    private startLane = 2;
+    private startLane = 1;
     private dummyYSeperation = 200;
     private maxDummyRowFill = 0.4;
     private speedMaxRuns = 60*20;
-    private laneCount = 3;
+    private laneCount = 8;
     private numDummyCars = 10;    
     private dummyHeadStart = 200;
     
-    private static readonly brainDevelopmentCycles = 100;
+    private static speedCompletes = 0;
+    private static readonly brainDevelopmentCycles = 50;
+    private static readonly speedBruteForceRoad = true;
 
     private timesUp = false;
     private courseCompleted = false;
@@ -106,8 +110,10 @@ class Simulation {
                 NeuralNetwork.mutate(brain,this.mutationConstant);
             }
             let car = new Car(
-                this.road.getLaneXval(this.startLane),
-                this.startY,false,brain
+                this.road.getLaneXval(this.startLane),this.startY,
+                this.road.laneWidth * this.carWidthToLaneWidth,
+                this.road.laneWidth * this.carHeightToLaneWidth,
+                false,brain
             );
             cars.push(car);
         }
@@ -133,7 +139,13 @@ class Simulation {
         const dummies : Car[] = JSON.parse(dummiesText);
 
         for (let dummy of dummies) {
-            cars.push(new Car(dummy.location.x,dummy.location.y,true));    
+            let car = new Car(
+                dummy.location.x,dummy.location.y,
+                this.carWidthToLaneWidth * this.road.laneWidth,
+                this.carHeightToLaneWidth * this.road.laneWidth,
+                true
+            )
+            cars.push(car);
         }
         return cars;
     }
@@ -162,7 +174,12 @@ class Simulation {
             }
             lanesTaken.push(lane);
     
-            cars.push(new Car(this.road.getLaneXval(lane + 1),currY));
+            let car = new Car(
+                this.road.getLaneXval(lane + 1),currY,
+                this.carWidthToLaneWidth * this.road.laneWidth,
+                this.carHeightToLaneWidth * this.road.laneWidth
+            )
+            cars.push(car);
         }
 
         cars = cars.sort( (a,b) => a.location.y - b.location.y);
@@ -219,7 +236,7 @@ class Simulation {
         this.sortCarsByPerformance();
         let bestCar = this.smartCars[0];
 
-        if (bestCar.carsPassed == this.numDummyCars) {
+        if (bestCar.carsPassed >= this.numDummyCars) {
             console.log("Course complete, create new road");
             this.courseCompleted = true;
             this.timesUp = true;
@@ -404,12 +421,14 @@ class Simulation {
             String(this.defaultMutationConstant)
         );
         console.log("new road created");
+        setTimeout(() => Simulation.startAgain(), 1000);
     }
 
     /**
      * Logs initial data.
      */
     private logStart() : void {
+        console.log("==============")
         console.log("mutation constant: ", this.mutationConstant);
         console.log("previous best score: ", 
             localStorage.getItem(this.storageScoreKey)
@@ -417,21 +436,20 @@ class Simulation {
         console.log("failure streak: ", 
             localStorage.getItem(this.storageFailKey)
         );
-        console.log("==============")
     }
 
     /**
      * Logs results of simulation.
      */
     private logResults() : void {
-        console.log("==============")
-        console.log("current best score: ", this.smartCars[0].score);
         console.log("new mutation constant: ", 
             localStorage.getItem(this.storageMutateKey)
         );
+        console.log("current best score: ", this.smartCars[0].score);
         console.log("failure streak: ", 
             localStorage.getItem(this.storageFailKey)
         );
+        console.log("==============")
     }
 
     /**
@@ -455,30 +473,35 @@ class Simulation {
         canvas : HTMLCanvasElement) : void 
     {
         let cycle = 0;
-        let coursesCompleted = 0;
 
         while (cycle < Simulation.brainDevelopmentCycles) {
             console.log("CYCLE",cycle);
             let simulation = new Simulation(true,canvas);
+            if (cycle == 0 && !this.speedBruteForceRoad) simulation.newRoad(); 
             simulation.start();
             if (simulation.courseCompleted) {
-                coursesCompleted++;
-                if (coursesCompleted %
+                Simulation.speedCompletes++;
+                if (Simulation.speedCompletes %
                     simulation.completesToAddDifficulty == 0) 
                 {
-                    simulation.increaseDifficulty(coursesCompleted);
+                    simulation.increaseDifficulty();
                 }
                 simulation.newRoad();
             } 
             cycle++;
         }
+        console.log("fast develop complete");
+        console.log(`courses completed: ${Simulation.speedCompletes}`)
+        Simulation.speedCompletes = 0;
     }
 
     /**
      * Increases difficulty of new road based on complete count.
      */
-    private increaseDifficulty(completed : number) : void {
-        if (completed % this.completesToIncreaseRowFill == 0) {
+    private increaseDifficulty() : void {
+        if (Simulation.speedCompletes %
+            this.completesToIncreaseRowFill == 0) 
+        {
             let newFill = this.maxDummyRowFill + 1 / this.laneCount;
             if (newFill < 1) {
                 this.maxDummyRowFill += 1 / this.laneCount;

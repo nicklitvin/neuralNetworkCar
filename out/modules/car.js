@@ -2,13 +2,11 @@
  * Car object that can be controlled and moved.
  */
 class Car {
-    constructor(x, y, isDummy = true, brain = null) {
+    constructor(x, y, width, height, isDummy = true, brain = null) {
         // adjustables
         this.dummyColor = "red";
         this.playerColor = "blue";
         this.damagedColor = "black";
-        this.width = 30;
-        this.height = 50;
         this.acceleration = 0.2;
         this.zeroSpeedThresh = 0.01;
         this.maxDummySpeed = 0;
@@ -16,6 +14,8 @@ class Car {
         this.friction = 0.97;
         this.rotationSpeed = 0.05;
         this.speed = 0;
+        this.width = 30;
+        this.height = 50;
         this.score = 0;
         this.angle = 0;
         this.damaged = false;
@@ -23,6 +23,8 @@ class Car {
         this.isDummy = isDummy;
         this.location = new Coordinate(x, y);
         this.controls = new Controls(this.isDummy);
+        this.width = width;
+        this.height = height;
         if (this.isDummy) {
             this.maxSpeed = this.maxDummySpeed;
             this.color = this.dummyColor;

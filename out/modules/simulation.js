@@ -22,10 +22,10 @@ class Simulation {
         this.startY = 0;
         this.mutationShrink = 0.5;
         this.mutationGrowth = 1.02;
-        this.minMutationConstant = 0.05;
-        this.maxMutationConstant = 5;
+        this.minMutationConstant = 0.1;
+        this.maxMutationConstant = 3;
         this.progressCheckSec = 1.5;
-        this.drawSensors = false;
+        this.drawSensors = true;
         this.roadBorder = 10;
         this.restartOnFinish = false;
         this.continuouslyRun = true;
@@ -36,12 +36,14 @@ class Simulation {
         this.dummyCountGrowth = 1.5;
         this.completesToAddDifficulty = 2;
         this.completesToIncreaseRowFill = 30;
+        this.carWidthToLaneWidth = 0.6;
+        this.carHeightToLaneWidth = 0.9;
         // adjustable values
-        this.startLane = 2;
+        this.startLane = 1;
         this.dummyYSeperation = 200;
         this.maxDummyRowFill = 0.4;
         this.speedMaxRuns = 60 * 20;
-        this.laneCount = 3;
+        this.laneCount = 8;
         this.numDummyCars = 10;
         this.dummyHeadStart = 200;
         this.timesUp = false;
@@ -79,7 +81,7 @@ class Simulation {
             if (i > 0 && brain) {
                 NeuralNetwork.mutate(brain, this.mutationConstant);
             }
-            let car = new Car(this.road.getLaneXval(this.startLane), this.startY, false, brain);
+            let car = new Car(this.road.getLaneXval(this.startLane), this.startY, this.road.laneWidth * this.carWidthToLaneWidth, this.road.laneWidth * this.carHeightToLaneWidth, false, brain);
             cars.push(car);
         }
         return cars;
@@ -99,7 +101,8 @@ class Simulation {
         let dummiesText = localStorage.getItem(this.storageDummiesKey);
         const dummies = JSON.parse(dummiesText);
         for (let dummy of dummies) {
-            cars.push(new Car(dummy.location.x, dummy.location.y, true));
+            let car = new Car(dummy.location.x, dummy.location.y, this.carWidthToLaneWidth * this.road.laneWidth, this.carHeightToLaneWidth * this.road.laneWidth, true);
+            cars.push(car);
         }
         return cars;
     }
@@ -121,7 +124,8 @@ class Simulation {
                 lane = (lane + 1) % this.laneCount;
             }
             lanesTaken.push(lane);
-            cars.push(new Car(this.road.getLaneXval(lane + 1), currY));
+            let car = new Car(this.road.getLaneXval(lane + 1), currY, this.carWidthToLaneWidth * this.road.laneWidth, this.carHeightToLaneWidth * this.road.laneWidth);
+            cars.push(car);
         }
         cars = cars.sort((a, b) => a.location.y - b.location.y);
         localStorage.setItem(this.storageDummiesKey, JSON.stringify(cars));
@@ -173,7 +177,7 @@ class Simulation {
     updateSimulationStatus() {
         this.sortCarsByPerformance();
         let bestCar = this.smartCars[0];
-        if (bestCar.carsPassed == this.numDummyCars) {
+        if (bestCar.carsPassed >= this.numDummyCars) {
             console.log("Course complete, create new road");
             this.courseCompleted = true;
             this.timesUp = true;
@@ -326,24 +330,25 @@ class Simulation {
         localStorage.setItem(this.storageScoreKey, String(0));
         localStorage.setItem(this.storageMutateKey, String(this.defaultMutationConstant));
         console.log("new road created");
+        setTimeout(() => Simulation.startAgain(), 1000);
     }
     /**
      * Logs initial data.
      */
     logStart() {
+        console.log("==============");
         console.log("mutation constant: ", this.mutationConstant);
         console.log("previous best score: ", localStorage.getItem(this.storageScoreKey));
         console.log("failure streak: ", localStorage.getItem(this.storageFailKey));
-        console.log("==============");
     }
     /**
      * Logs results of simulation.
      */
     logResults() {
-        console.log("==============");
-        console.log("current best score: ", this.smartCars[0].score);
         console.log("new mutation constant: ", localStorage.getItem(this.storageMutateKey));
+        console.log("current best score: ", this.smartCars[0].score);
         console.log("failure streak: ", localStorage.getItem(this.storageFailKey));
+        console.log("==============");
     }
     /**
      * Sort cars by performance and save order. Cars passed is
@@ -361,27 +366,32 @@ class Simulation {
      */
     static speedBrainDevelopment(canvas) {
         let cycle = 0;
-        let coursesCompleted = 0;
         while (cycle < Simulation.brainDevelopmentCycles) {
             console.log("CYCLE", cycle);
             let simulation = new Simulation(true, canvas);
+            if (cycle == 0 && !this.speedBruteForceRoad)
+                simulation.newRoad();
             simulation.start();
             if (simulation.courseCompleted) {
-                coursesCompleted++;
-                if (coursesCompleted %
+                Simulation.speedCompletes++;
+                if (Simulation.speedCompletes %
                     simulation.completesToAddDifficulty == 0) {
-                    simulation.increaseDifficulty(coursesCompleted);
+                    simulation.increaseDifficulty();
                 }
                 simulation.newRoad();
             }
             cycle++;
         }
+        console.log("fast develop complete");
+        console.log(`courses completed: ${Simulation.speedCompletes}`);
+        Simulation.speedCompletes = 0;
     }
     /**
      * Increases difficulty of new road based on complete count.
      */
-    increaseDifficulty(completed) {
-        if (completed % this.completesToIncreaseRowFill == 0) {
+    increaseDifficulty() {
+        if (Simulation.speedCompletes %
+            this.completesToIncreaseRowFill == 0) {
             let newFill = this.maxDummyRowFill + 1 / this.laneCount;
             if (newFill < 1) {
                 this.maxDummyRowFill += 1 / this.laneCount;
@@ -415,4 +425,6 @@ class Simulation {
         }
     }
 }
-Simulation.brainDevelopmentCycles = 100;
+Simulation.speedCompletes = 0;
+Simulation.brainDevelopmentCycles = 50;
+Simulation.speedBruteForceRoad = true;

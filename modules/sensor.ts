@@ -5,11 +5,11 @@
 class Sensor {
     // adjustable
     private readonly rayLength = 200;
-    private readonly raySpread = 2 * Math.PI;
+    private readonly raySpread = 3/2 * Math.PI;
     private readonly rayColor = "yellow";
     private readonly rayColorIntersected = "black";
     private readonly rayWidth = 3;
-    public readonly rayCount = 10;
+    public readonly rayCount = 20;
 
     private car : Car;
     private borders : Border[];

@@ -11,8 +11,8 @@ class Road {
     private width : number;
     private height : number;
     private lanes : number;
-    private laneWidth : number;
-
+    
+    public laneWidth : number;
     public borders : Border[] = [];
 
     constructor(

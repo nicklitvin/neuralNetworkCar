@@ -1,7 +1,4 @@
-set appopriate time for fast develop
-first practice on emptyish roads then fill up
-smart increase in difficulty 
-change car width length based on lanes
+error checks
 
 make nicer user interface
 variant dummy speeds
