@@ -10,7 +10,7 @@ class Sensor {
         this.rayColor = "yellow";
         this.rayColorIntersected = "black";
         this.rayWidth = 3;
-        this.rayCount = 20;
+        this.rayCount = 7;
         this.car = car;
     }
     /**

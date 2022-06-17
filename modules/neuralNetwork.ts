@@ -6,6 +6,7 @@
 class NeuralNetwork {
     // adjustable
     private readonly neuronLevelNodeCounts = [10,12,10];
+    
     private levels : NeuronLevel[] = [];
 
     constructor(inputNodes : number, outputNodes : number) {

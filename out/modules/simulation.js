@@ -17,6 +17,7 @@ class Simulation {
         this.defaultDummyYSeperation = 200;
         this.defaultMutationConstant = 1.5;
         this.defaultDummyRowFill = 0.4;
+        this.speedProgressCheck = 120;
         // adjustable values
         this.numSmartCars = 100;
         this.startY = 0;
@@ -24,7 +25,7 @@ class Simulation {
         this.mutationGrowth = 1.02;
         this.minMutationConstant = 0.1;
         this.maxMutationConstant = 3;
-        this.progressCheckSec = 1.5;
+        this.progressCheckSec = 2.5;
         this.drawSensors = true;
         this.roadBorder = 10;
         this.restartOnFinish = false;
@@ -42,8 +43,8 @@ class Simulation {
         this.startLane = 1;
         this.dummyYSeperation = 200;
         this.maxDummyRowFill = 0.4;
-        this.speedMaxRuns = 60 * 20;
-        this.laneCount = 8;
+        this.speedMaxRuns = 60 * 40;
+        this.laneCount = 3;
         this.numDummyCars = 10;
         this.dummyHeadStart = 200;
         this.timesUp = false;
@@ -148,7 +149,7 @@ class Simulation {
         this.logStart();
         if (this.isSpeedRun) {
             while (this.speedRunsCounter < this.speedMaxRuns) {
-                if (this.speedRunsCounter % 60 == 0) {
+                if (this.speedRunsCounter % this.speedProgressCheck == 0) {
                     this.updateSimulationStatus();
                 }
                 if (this.timesUp)
@@ -310,6 +311,7 @@ class Simulation {
         let newConstant = this.mutationConstant * (this.mutationGrowth ** failCount);
         if (newConstant > this.maxMutationConstant) {
             newConstant = this.defaultMutationConstant;
+            failCount = -1;
             console.log("mutation constant too high, reseting value");
         }
         localStorage.setItem(this.storageMutateKey, String(newConstant));
@@ -325,12 +327,14 @@ class Simulation {
      * Create and save a traffic arrangement to local storage.
      * Reset best score for next map.
      */
-    newRoad() {
+    newRoad(restart = true) {
         this.createAndSaveDummyCars();
         localStorage.setItem(this.storageScoreKey, String(0));
         localStorage.setItem(this.storageMutateKey, String(this.defaultMutationConstant));
         console.log("new road created");
-        setTimeout(() => Simulation.startAgain(), 1000);
+        if (restart) {
+            setTimeout(() => Simulation.startAgain(), 1000);
+        }
     }
     /**
      * Logs initial data.
@@ -370,7 +374,7 @@ class Simulation {
             console.log("CYCLE", cycle);
             let simulation = new Simulation(true, canvas);
             if (cycle == 0 && !this.speedBruteForceRoad)
-                simulation.newRoad();
+                simulation.newRoad(false);
             simulation.start();
             if (simulation.courseCompleted) {
                 Simulation.speedCompletes++;
@@ -378,7 +382,7 @@ class Simulation {
                     simulation.completesToAddDifficulty == 0) {
                     simulation.increaseDifficulty();
                 }
-                simulation.newRoad();
+                simulation.newRoad(false);
             }
             cycle++;
         }

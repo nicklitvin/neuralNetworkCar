@@ -12,6 +12,7 @@ class Car {
     private readonly maxPlayerSpeed = 3;
     private readonly friction = 0.97;
     private readonly rotationSpeed = 0.05;
+    private readonly distanceForPoint = 1000;
     
     private maxSpeed : number;
     private color : string;
@@ -222,9 +223,13 @@ class Car {
     public calculatePerformance (dummyCars : Car[]) : void {
         let damageScore = this.damaged ? 0 : 1;
         let distanceScore = Math.min(
-            1,
-            Math.max(0,this.location.y / dummyCars[0].location.y)
+            1, 
+            Math.max(
+                Math.max(0,this.location.y / dummyCars[0].location.y),
+                -this.location.y / this.distanceForPoint
+            )
         );
+        
         let passedScore = this.carsPassed / dummyCars.length;
 
         let priorities = [damageScore,distanceScore,passedScore];

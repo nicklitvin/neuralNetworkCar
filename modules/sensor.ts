@@ -9,7 +9,7 @@ class Sensor {
     private readonly rayColor = "yellow";
     private readonly rayColorIntersected = "black";
     private readonly rayWidth = 3;
-    public readonly rayCount = 20;
+    public readonly rayCount = 7;
 
     private car : Car;
     private borders : Border[];

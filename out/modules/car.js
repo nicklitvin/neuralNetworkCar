@@ -13,6 +13,7 @@ class Car {
         this.maxPlayerSpeed = 3;
         this.friction = 0.97;
         this.rotationSpeed = 0.05;
+        this.distanceForPoint = 1000;
         this.speed = 0;
         this.width = 30;
         this.height = 50;
@@ -172,7 +173,7 @@ class Car {
      */
     calculatePerformance(dummyCars) {
         let damageScore = this.damaged ? 0 : 1;
-        let distanceScore = Math.min(1, Math.max(0, this.location.y / dummyCars[0].location.y));
+        let distanceScore = Math.min(1, Math.max(Math.max(0, this.location.y / dummyCars[0].location.y), -this.location.y / this.distanceForPoint));
         let passedScore = this.carsPassed / dummyCars.length;
         let priorities = [damageScore, distanceScore, passedScore];
         let score = 0;

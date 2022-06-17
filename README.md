@@ -30,3 +30,11 @@ new road - creates new road
 refresh page - refreshes page
 
 fast develop - runs simulation many times without visuals
+
+# Notes
+
+Values under the adjustable tag at the beginning of some classes
+can be modified within reason without breaking the program. 
+
+Note that if fast develop is continuously failing, try a new road or adjusting the values.
+

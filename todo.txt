@@ -1,8 +1,8 @@
+save brain in file
+import brain and adjust car
 error checks
-
 make nicer user interface
 variant dummy speeds
 stay in lane condition
-save brain in file
 add assertions for json.parse (bad input control)
 
