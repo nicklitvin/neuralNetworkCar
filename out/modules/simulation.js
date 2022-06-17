@@ -6,7 +6,7 @@
  * neural network.
  */
 class Simulation {
-    constructor(canvas) {
+    constructor(isSpeedRun, canvas) {
         // localStorageKeys
         this.storageBrainKey = "bestBrain";
         this.storageScoreKey = "bestScore";
@@ -14,8 +14,8 @@ class Simulation {
         this.storageFailKey = "failCount";
         this.storageMutateKey = "mutationConstant";
         // adjustable values
-        this.numSmartCars = 750;
-        this.numDummyCars = 20;
+        this.numSmartCars = 100;
+        this.numDummyCars = 10;
         this.startY = 0;
         this.dummyHeadStart = 200;
         this.laneCount = 3;
@@ -25,11 +25,12 @@ class Simulation {
         this.defaultMutationConstant = 1.5;
         this.maxMutationConstant = 5;
         this.progressCheckSec = 1.5;
+        this.speedProgressCheckRuns = 60 * 20 + 1;
         this.drawSensors = false;
         this.roadBorder = 10;
         this.restartOnFinish = false;
         this.continuouslyRun = true;
-        this.maxDummyRowFill = 0.5;
+        this.maxDummyRowFill = 0.7;
         this.carYRelativeToCanvas = 0.8;
         this.dummySeparationY = 200;
         this.roadScreenLength = 50;
@@ -37,8 +38,11 @@ class Simulation {
         this.timesUp = false;
         this.courseCompleted = false;
         this.lastTopScore = 0;
+        this.isSpeedRun = false;
+        this.speedRunsCounter = 0;
         this.smartCars = [];
         this.dummyCars = [];
+        this.isSpeedRun = isSpeedRun;
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d");
         this.road = new Road(this.canvas.width / 2, this.canvas.height / 2, this.canvas.width - this.roadBorder * 2, this.canvas.height * this.roadScreenLength, this.laneCount);
@@ -99,7 +103,7 @@ class Simulation {
         let cars = [];
         let lanesTaken = [];
         for (let i = 0; i < this.numDummyCars; i++) {
-            if (lanesTaken.length > Math.floor(this.laneCount * this.maxDummyRowFill)) {
+            if (lanesTaken.length + 1 > Math.floor(this.laneCount * this.maxDummyRowFill)) {
                 currY -= this.dummySeparationY;
                 lanesTaken = [];
             }
@@ -118,39 +122,61 @@ class Simulation {
      * manually changing values.
      */
     static destroyAll() {
-        localStorage.clear();
-        startAgain();
+        console.log("destroying data");
+        setTimeout(() => {
+            localStorage.clear();
+            this.startAgain();
+        }, 1000);
     }
     /**
      * Starts simulation by setting a timer and calling the run function.
      */
     start() {
         this.logStart();
-        this.setTimer();
-        this.run();
+        if (this.isSpeedRun) {
+            while (this.speedRunsCounter < this.speedProgressCheckRuns) {
+                if (this.speedRunsCounter % 60 == 0) {
+                    this.updateSimulationStatus();
+                }
+                if (this.timesUp)
+                    break;
+                this.run();
+                this.speedRunsCounter++;
+            }
+            if (!this.timesUp) {
+                this.timesUp = true;
+            }
+            this.run();
+        }
+        else {
+            this.setTimer();
+            this.run();
+        }
     }
     /**
      * Sets timer that stops when cars are not making any progress
      * and alerts if no more progress can be made.
      */
     setTimer() {
-        setTimeout(() => {
-            this.sortCarsByPerformance();
-            let bestCar = this.smartCars[0];
-            if (bestCar.carsPassed == this.numDummyCars) {
-                console.log("Course complete, create new road");
-                this.courseCompleted = true;
-                // localStorage.setItem(this.storageFailKey,String(-1));
-                this.timesUp = true;
-            }
-            else if (bestCar.score > this.lastTopScore) {
-                this.lastTopScore = bestCar.score;
+        let timeInterval = this.progressCheckSec * 1000;
+        setTimeout(() => this.updateSimulationStatus(), timeInterval);
+    }
+    updateSimulationStatus() {
+        this.sortCarsByPerformance();
+        let bestCar = this.smartCars[0];
+        if (bestCar.carsPassed == this.numDummyCars) {
+            console.log("Course complete, create new road");
+            this.courseCompleted = true;
+            this.timesUp = true;
+        }
+        else if (bestCar.score > this.lastTopScore) {
+            this.lastTopScore = bestCar.score;
+            if (!this.isSpeedRun)
                 this.setTimer();
-            }
-            else {
-                this.timesUp = true;
-            }
-        }, this.progressCheckSec * 1000);
+        }
+        else {
+            this.timesUp = true;
+        }
     }
     /**
      * Runs simulation by updating canvas and status of all cars until
@@ -158,33 +184,41 @@ class Simulation {
      * this.startAgain is true, starts the simulation again.
      */
     run() {
+        console.log("RUN");
         this.smartCars.sort((a, b) => a.location.y - b.location.y);
-        this.canvas.height = window.innerHeight;
-        this.ctx.save();
-        this.ctx.translate(0, -this.smartCars[0].location.y +
-            this.canvas.height * this.carYRelativeToCanvas);
-        this.moveDummyCars();
+        if (!this.isSpeedRun) {
+            this.canvas.height = window.innerHeight;
+            this.ctx.save();
+            this.ctx.translate(0, -this.smartCars[0].location.y +
+                this.canvas.height * this.carYRelativeToCanvas);
+        }
+        this.moveDrawDummyCars();
         this.moveDrawSmartCars();
-        this.road.draw(this.ctx);
-        this.ctx.restore();
+        if (!this.isSpeedRun) {
+            this.road.draw(this.ctx);
+            this.ctx.restore();
+        }
         if (this.timesUp) {
             this.resolveSimulation();
             this.logResults();
-            if (this.restartOnFinish) {
-                this.startAgain();
+            if (this.isSpeedRun)
+                return;
+            else if (this.restartOnFinish) {
+                Simulation.startAgain();
             }
         }
-        else if (this.continuouslyRun) {
+        else if (this.continuouslyRun && !this.isSpeedRun) {
             requestAnimationFrame(this.run.bind(this));
         }
     }
     /**
      * Moves and draws all cars in this.dummyCars.
      */
-    moveDummyCars() {
+    moveDrawDummyCars() {
         for (let car of this.dummyCars) {
             car.update();
-            car.draw(this.ctx, false);
+            if (!this.isSpeedRun)
+                car.draw(this.ctx, false);
         }
     }
     /**
@@ -206,11 +240,13 @@ class Simulation {
         for (let car of this.smartCars) {
             car.update(borders, this.dummyCars);
             if (first) {
-                car.draw(this.ctx, this.drawSensors);
+                if (!this.isSpeedRun)
+                    car.draw(this.ctx, this.drawSensors);
                 first = false;
             }
             else {
-                car.draw(this.ctx, false);
+                if (!this.isSpeedRun)
+                    car.draw(this.ctx, false);
             }
         }
     }
@@ -225,11 +261,12 @@ class Simulation {
         let highScore = Number(localStorage.getItem(this.storageScoreKey));
         let scoreToBeat = Number(highScore) * this.improvementMin;
         let bestScore = this.smartCars[0].score;
-        if (!highScore || bestScore > scoreToBeat || this.courseCompleted) {
-            this.saveBestBrain();
+        if (highScore != null && bestScore < scoreToBeat &&
+            !this.courseCompleted) {
+            this.increaseMutationConstant();
         }
         else {
-            this.increaseMutationConstant();
+            this.saveBestBrain();
         }
         localStorage.setItem(this.storageScoreKey, String(this.smartCars[0].score));
     }
@@ -265,7 +302,7 @@ class Simulation {
     /**
      * Refreshes page.
      */
-    startAgain() {
+    static startAgain() {
         location.reload();
     }
     /**
@@ -276,7 +313,7 @@ class Simulation {
         this.createAndSaveDummyCars();
         localStorage.setItem(this.storageScoreKey, String(0));
         localStorage.setItem(this.storageMutateKey, String(this.defaultMutationConstant));
-        this.startAgain();
+        console.log("new road created");
     }
     /**
      * Logs initial data.
@@ -304,4 +341,17 @@ class Simulation {
         this.smartCars.forEach(car => car.calculatePerformance(this.dummyCars));
         this.smartCars.sort((a, b) => b.score - a.score);
     }
+    static speedBrainDevelopment(canvas) {
+        let cycle = 0;
+        while (cycle < Simulation.brainDevelopmentCycles) {
+            console.log("CYCLE", cycle);
+            let simulation = new Simulation(true, canvas);
+            simulation.start();
+            if (simulation.courseCompleted) {
+                simulation.newRoad();
+            }
+            cycle++;
+        }
+    }
 }
+Simulation.brainDevelopmentCycles = 10;

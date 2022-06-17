@@ -14,14 +14,13 @@ class Car {
     private readonly maxPlayerSpeed = 3;
     private readonly friction = 0.97;
     private readonly rotationSpeed = 0.05;
-    private readonly yDistanceForPoint = 500;
     
     private maxSpeed : number;
     private color : string;
     private isDummy : boolean;
     private corners : Coordinate[];
     private sensor : Sensor;
-    private controls: Controls;
+    public controls: Controls; // move to private
     private speed = 0;
 
     public location: Coordinate; // center of car
@@ -218,21 +217,21 @@ class Car {
      * dummy cars passed, y distance traveled forward, no damaged
      */
     public calculatePerformance (dummyCars : Car[]) : void {
+        let damageScore = this.damaged ? 0 : 1;
+        let distanceScore = Math.min(
+            1,
+            Math.max(0,this.location.y / dummyCars[0].location.y)
+        );
+        let passedScore = this.carsPassed / dummyCars.length;
+
+        let priorities = [damageScore,distanceScore,passedScore];
         let score = 0;
-        let exponent = 1;
         let base = 2;
 
-        let damageScore = this.damaged ? 0 : 1;
-        score += exponent * damageScore;
-        exponent *= base;
+        for (let i = 0; i < priorities.length; i++) {
+            score += base ** (i*2) * priorities[i];
+        }
 
-        let distanceScore = Math.max(0,this.location.y / dummyCars[0].location.y);
-        score += exponent * distanceScore;
-        exponent *= base;
-
-        let passedScore = this.carsPassed / dummyCars.length;
-        score += exponent * passedScore;
-        
         this.score = score;
     }
 }

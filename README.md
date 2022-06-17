@@ -17,3 +17,16 @@ create file for setuping up server using Node.js
 
 JS can be edited directly in /out folder or TS files can be edited
 and the project can be rebuilt using tsconfig.json
+
+
+# Site Buttons
+
+start - creates road if none and starts simulation
+
+destroy - destory all data (brain,road,score...)
+
+new road - creates new road
+
+refresh page - refreshes page
+
+fast develop - runs simulation many times without visuals

@@ -15,7 +15,6 @@ class Car {
         this.maxPlayerSpeed = 3;
         this.friction = 0.97;
         this.rotationSpeed = 0.05;
-        this.yDistanceForPoint = 500;
         this.speed = 0;
         this.score = 0;
         this.angle = 0;
@@ -170,17 +169,15 @@ class Car {
      * dummy cars passed, y distance traveled forward, no damaged
      */
     calculatePerformance(dummyCars) {
-        let score = 0;
-        let exponent = 1;
-        let base = 2;
         let damageScore = this.damaged ? 0 : 1;
-        score += exponent * damageScore;
-        exponent *= base;
-        let distanceScore = Math.max(0, this.location.y / dummyCars[0].location.y);
-        score += exponent * distanceScore;
-        exponent *= base;
+        let distanceScore = Math.min(1, Math.max(0, this.location.y / dummyCars[0].location.y));
         let passedScore = this.carsPassed / dummyCars.length;
-        score += exponent * passedScore;
+        let priorities = [damageScore, distanceScore, passedScore];
+        let score = 0;
+        let base = 2;
+        for (let i = 0; i < priorities.length; i++) {
+            score += base ** (i * 2) * priorities[i];
+        }
         this.score = score;
     }
 }

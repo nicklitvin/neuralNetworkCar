@@ -1,25 +1,44 @@
 let simulation : Simulation;
 
 function createSimulation() : void {
+    console.clear();
     const element = document.getElementById("myCanvas"); 
     const canvas = element as HTMLCanvasElement;
-    canvas.width = 200;
-    canvas.height = window.innerHeight;
 
-    simulation = new Simulation(canvas);
+    simulation = new Simulation(false,canvas);
     simulation.start();
 }
 
 function destroyAll() : void {
+    console.clear();
     Simulation.destroyAll();
 }
 
 function newRoad() : void {
-    simulation.newRoad();
+    if (simulation == null) {
+        console.log("cant create road, no simulation");
+    } else {
+        console.clear();
+        simulation.newRoad();
+    }
 }
 
 function startAgain() : void {
-    simulation.startAgain();
+    Simulation.startAgain();
 }
 
-createSimulation();
+function speedRun() : void {
+    console.clear();
+    const element = document.getElementById("myCanvas"); 
+    const canvas = element as HTMLCanvasElement;
+    Simulation.speedBrainDevelopment(canvas);
+}
+
+function setupCanvas() : void {
+    const element = document.getElementById("myCanvas"); 
+    const canvas = element as HTMLCanvasElement;
+    canvas.width = 200;
+    canvas.height = window.innerHeight;
+}
+
+setupCanvas();

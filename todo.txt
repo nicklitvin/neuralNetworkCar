@@ -1,4 +1,5 @@
-speed run evolution without visuals
+set appopriate time for fast develop
+first practice on emptyish roads then fill up
 
 add max speed approach without drawing
 make nicer user interface
